@@ -1,0 +1,10 @@
+2019-03-27 | Error seems to be fixed. Still going to do more testing.
+2019-03-26 | The error is occuring when updating the pc map after teleporting.
+2019-03-26 | Most of the way done with teleporting. Working on fixing a random segmenation fault.
+2019-03-26 | Finished fog toggle. Working on teleporting.
+2019-03-26 | Fixed error when switching dungeons.
+2019-03-25 | Reverted back to previous code. Changed structs to classes. Added pc map.
+2019-03-15 | Finished all methods in the dungeon class.
+2019-03-15 | Created a class for characters.
+2019-03-14 | Turned dungeon into a class.
+2019-03-13 | Made code compile with g++.
