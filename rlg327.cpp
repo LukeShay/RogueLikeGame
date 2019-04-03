@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <string>
 #include <ctime>
+#include <queue>
 
 #include "characters.h"
 #include "dungeon.h"
@@ -36,14 +37,18 @@ char *print_characters(const void *v) {
   return out;
 }
 
-
 int32_t npc_cmp(const void *key, const void *with)
 {
   return ((npc *)key)->p - ((npc *)with)->p;
 }
 
 int main(int argc, char *argv[]) {
-  dungeon_space_t dungeon[DUNGEON_Y][DUNGEON_X];
+  heap_t mh;
+
+  heap_init(&mh, npc_cmp, NULL);
+
+  parse_monsters(&mh);
+  /* dungeon_space_t dungeon[DUNGEON_Y][DUNGEON_X];
   character_t *character_map[DUNGEON_Y][DUNGEON_X],
       *pc = (character_t *)malloc(sizeof(*pc)), *temp;
   heap_t mh;
@@ -120,10 +125,10 @@ int main(int argc, char *argv[]) {
 
   first_dungeon(dungeon, character_map, &mh, pc, 3, num_mon, action);
 
-  // io_init_terminal();
-  // render_dungeon_first(dungeon, character_map, pc, &mh, fog);
+  io_init_terminal();
+  render_dungeon_first(dungeon, character_map, pc, &mh, fog);
 
-  while (0) { //(temp = (character_t *)heap_remove_min(&mh))
+  while ((temp = (character_t *)heap_remove_min(&mh))) {
     if (has_characteristic(temp->characteristic, PC)) {
       if (mh.size == 0) {
         game_over(WIN);
@@ -190,10 +195,7 @@ int main(int argc, char *argv[]) {
 
   free(pc);
 
-  heap_init(&mh, npc_cmp, NULL);
-
-  parse_monsters("test.txt", &mh);
-  heap_delete(&mh);
+  heap_delete(&mh); */
 
   return 0;
 }

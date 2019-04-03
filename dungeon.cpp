@@ -546,7 +546,7 @@ void new_dungeon(dungeon_space_t dungeon[][DUNGEON_X],
                  character_t *pc_char, int num_lives, int num_mon,
                  action_t action)
 {
-  int num_spaces, num;
+  int num_spaces = 0, num;
 
   clear_dungeon(character_map);
   heap_delete(mh);
