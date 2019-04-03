@@ -6,6 +6,8 @@
 #include "characters.h"
 #include "dungeon.h"
 #include "user_interface.h"
+#include "npc.h"
+#include "monster_parser.h"
 
 #define MOVE_INVALID 0
 #define MOVE_VALID 1
@@ -32,6 +34,12 @@ char *print_characters(const void *v) {
            mon.location.ypos, mon.p, mon.lives);
 
   return out;
+}
+
+
+int32_t npc_cmp(const void *key, const void *with)
+{
+  return ((npc *)key)->p - ((npc *)with)->p;
 }
 
 int main(int argc, char *argv[]) {
@@ -112,10 +120,10 @@ int main(int argc, char *argv[]) {
 
   first_dungeon(dungeon, character_map, &mh, pc, 3, num_mon, action);
 
-  io_init_terminal();
-  render_dungeon_first(dungeon, character_map, pc, &mh, fog);
+  // io_init_terminal();
+  // render_dungeon_first(dungeon, character_map, pc, &mh, fog);
 
-  while ((temp = (character_t *)heap_remove_min(&mh))) {
+  while (0) { //(temp = (character_t *)heap_remove_min(&mh))
     if (has_characteristic(temp->characteristic, PC)) {
       if (mh.size == 0) {
         game_over(WIN);
@@ -181,6 +189,10 @@ int main(int argc, char *argv[]) {
   over:
 
   free(pc);
+
+  heap_init(&mh, npc_cmp, NULL);
+
+  parse_monsters("test.txt", &mh);
   heap_delete(&mh);
 
   return 0;

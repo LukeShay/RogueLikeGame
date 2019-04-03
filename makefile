@@ -1,5 +1,5 @@
 CXX = g++
-FILES = rlg327.cpp dungeon.cpp priority_queue.cpp path.cpp characters.cpp heap.cpp user_interface.cpp monster_parser.h
+FILES = rlg327.cpp dungeon.cpp priority_queue.cpp path.cpp characters.cpp heap.cpp user_interface.cpp monster_parser.cpp npc.cpp dice.cpp
 
 RM = rm -rf
 

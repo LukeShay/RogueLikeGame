@@ -17,6 +17,7 @@ public:
   dice hp;
   dice ad;
   int rarity;
+  int p;
 
   npc();
   ~npc();
