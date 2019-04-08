@@ -1,7 +1,7 @@
-#include <fstream>
-#include "monster_parser.h"
 #include "dice.h"
+#include "monster_parser.h"
 #include "npc.h"
+#include <fstream>
 #include <iostream>
 
 #define FILE_PATH "/.rlg327/monster_desc.txt"
@@ -18,13 +18,7 @@
 #define RARITY "RRTY"
 #define END "END"
 
-#define SMART 0x00000001
-#define TELE 0x00000002
-#define TUNNEL 0x00000004
-#define ERRATIC 0x00000008
-
-void parse_monsters(heap_t *mh)
-{
+void parse_monsters(heap_t *mh) {
   int valid = 1, monster = 1;
   char *directory = getenv("HOME");
   char *path = (char *)malloc(strlen(directory) + strlen(FILE_PATH) + 1);
@@ -42,90 +36,66 @@ void parse_monsters(heap_t *mh)
 
   valid = str.compare(FILE_SEMANTIC);
 
-  while (!valid && getline(f, str))
-  {
+  while (!valid && getline(f, str)) {
     np = new npc;
 
     monster = str.compare(BEGIN_MONSTER);
-    
-    while (!monster)
-    {
+
+    while (!monster) {
       f >> str;
-      if (!str.compare(NAME))
-      {
+      if (!str.compare(NAME)) {
         f.get();
         getline(f, str);
         std::cout << str << std::endl;
         np->name = str;
-      }
-      else if (!str.compare(SYMBOL))
-      {
+      } else if (!str.compare(SYMBOL)) {
         getline(f, str);
         np->symbol = str[1];
         std::cout << np->symbol << std::endl;
-      }
-      else if (!str.compare(COLOR))
-      {
+      } else if (!str.compare(COLOR)) {
         f.get();
         getline(f, str);
         std::cout << str << std::endl;
         np->color = str;
-      }
-      else if (!str.compare(DESCRIPTION))
-      {
+      } else if (!str.compare(DESCRIPTION)) {
         f.get();
         getline(f, str);
 
-        while (str.compare("."))
-        {
+        while (str.compare(".")) {
           std::cout << str << std::endl;
           np->desc += str + "";
           getline(f, str);
         }
-      }
-      else if (!str.compare(SPEED))
-      {
+      } else if (!str.compare(SPEED)) {
         f.get();
         getline(f, str);
         std::cout << str << std::endl;
         np->speed.parse_dice(str);
-      }
-      else if (!str.compare(DAMAGE))
-      {
+      } else if (!str.compare(DAMAGE)) {
         f.get();
         getline(f, str);
         std::cout << str << std::endl;
         np->ad.parse_dice(str);
-      }
-      else if (!str.compare(HITPOINTS))
-      {
+      } else if (!str.compare(HITPOINTS)) {
         f.get();
         getline(f, str);
         std::cout << str << std::endl;
         np->hp.parse_dice(str);
-      }
-      else if (!str.compare(RARITY))
-      {
+      } else if (!str.compare(RARITY)) {
         f.get();
         getline(f, str);
         std::cout << str << std::endl;
         np->rarity = std::stoi(str);
-      }
-      else if (!str.compare(ABILITIES))
-      {
+      } else if (!str.compare(ABILITIES)) {
         f.get();
         getline(f, str);
         std::cout << str << std::endl;
-      }
-      else if (!str.compare(END))
-      {
+      } else if (!str.compare(END)) {
         f.get();
         getline(f, str);
         std::cout << str << std::endl;
         monster = 1;
-      }
-      else
-      {
+      } else {
         return;
       }
     }

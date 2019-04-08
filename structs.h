@@ -11,8 +11,7 @@
 #define C_PC 0x00000010
 #define PC_RADIUS 4
 
-typedef enum action
-{
+typedef enum action {
   save,
   load,
   loadSave,
@@ -21,24 +20,12 @@ typedef enum action
   loadSavenummon
 } action_t;
 
-class dungeon_space_t
-{
-public:
-  char terrain;
-  uint8_t hardness;
-  char pc_map;
-  int cost_t;
-  int cost_nt;
-};
-
-class point_t
-{
+class point_t {
 public:
   uint8_t xpos, ypos;
 };
 
-class character_t
-{
+class character_t {
 public:
   int characteristic;
   int speed;
