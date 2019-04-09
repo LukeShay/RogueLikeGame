@@ -5,6 +5,6 @@
 #include "item.hpp"
 #include <vector>
 
-void parse(std::vector<character> *mv, std::vector<item> *iv);
+void parse(std::vector<character_desc> *mv, std::vector<item_desc> *iv);
 
 #endif

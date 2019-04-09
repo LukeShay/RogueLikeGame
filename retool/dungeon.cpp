@@ -33,7 +33,6 @@
 #define ROOM_MAX_Y 4
 #define FILE_SEMANTIC "RLG327-S2019"
 #define FILE_PATH "/.rlg327/dungeon"
-#define PC_RADIUS 4
 
 #define hardnesspair(pair) (hardness_map[pair[dim_y]][pair[dim_x]])
 
@@ -43,18 +42,6 @@ int32_t monster_cmp(const void *key, const void *with) {
 
 int32_t corridor_path_cmp(const void *key, const void *with) {
   return ((corridor_path_t *)key)->cost - ((corridor_path_t *)with)->cost;
-}
-
-static int count_num_spaces(dungeon *d) {
-  int i, j, num = 0;
-
-  for (i = 1; i < DUNGEON_Y - 1; i++) {
-    for (j = 1; j < DUNGEON_X - 1; j++) {
-      if (d->terrain_map[i][j] != ' ')
-        num++;
-    }
-  }
-  return num;
 }
 
 dungeon::dungeon(character *pc_char, int num_lives, int num_mon,
@@ -77,11 +64,24 @@ dungeon::dungeon(character *pc_char, int num_lives, int num_mon,
   pc_char->x = pc.xpos;
   pc_char->y = pc.ypos;
 
+  this->character_map[pc_char->y][pc_char->x] = pc_char;
+
   init_pc_map(pc);
   update_pc_map(pc);
+  tunneling_path(this, pc);
+  non_tunneling_path(this, pc);
 }
 
-dungeon::~dungeon() {}
+dungeon::~dungeon() {
+  int x, y;
+  for (y = 0; y < DUNGEON_Y; y++) {
+    for (x = 0; x < DUNGEON_X; x++) {
+      if (character_map[y][x]) {
+        delete character_map[y][x];
+      }
+    }
+  }
+}
 
 point_t dungeon::generate_dungeon() {
   room_t rooms[ROOMS_MAX];
@@ -911,4 +911,89 @@ void dungeon::init_pc_map(point_t pc) {
       this->pc_map[y][x] = ' ';
     }
   }
+}
+
+void get_neighbors(uint8_t x, uint8_t y, neighbor_t arr[]) {
+  uint8_t i, j, k = 0;
+
+  for (i = y - 1; i <= y + 1; i++) {
+    for (j = x - 1; j <= x + 1; j++) {
+      if (!(i == y && j == x)) {
+        arr[k].x = j;
+        arr[k].y = i;
+        k++;
+      }
+    }
+  }
+}
+
+void non_tunneling_path(dungeon *d, point_t pc) {
+  uint8_t i, j;
+
+  for (i = 0; i < DUNGEON_Y; i++) {
+    for (j = 0; j < DUNGEON_X; j++) {
+      d->cost_nt_map[i][j] = INT_MAX;
+    }
+  }
+
+  d->cost_nt_map[pc.ypos][pc.xpos] = 0;
+  uint8_t x, y;
+  int c;
+  neighbor_t neighbors[8];
+
+  queue_t pq;
+  queue_init(&pq);
+  queue_push(&pq, pc.xpos, pc.ypos, 0);
+  while (queue_size(&pq)) {
+    queue_pop(&pq, &x, &y, &c);
+    get_neighbors(x, y, neighbors);
+
+    for (i = 0; i < 8; i++) {
+      if (d->hardness_map[neighbors[i].y][neighbors[i].x] == 0 &&
+          c + 1 < d->cost_nt_map[neighbors[i].y][neighbors[i].x]) {
+        d->cost_nt_map[neighbors[i].y][neighbors[i].x] = c + 1;
+        queue_push(&pq, neighbors[i].x, neighbors[i].y, c + 1);
+      }
+    }
+  }
+
+  queue_delete(&pq);
+}
+
+void tunneling_path(dungeon *d, point_t pc) {
+  uint8_t i, j;
+  uint8_t x, y;
+  int c;
+  int temp_c;
+  neighbor_t neighbors[8];
+  queue_t pq;
+
+  for (i = 0; i < DUNGEON_Y; i++) {
+    for (j = 0; j < DUNGEON_X; j++) {
+      d->cost_t_map[i][j] = INT_MAX;
+    }
+  }
+
+  d->cost_t_map[pc.ypos][pc.xpos] = 0;
+
+  queue_init(&pq);
+  queue_push(&pq, pc.xpos, pc.ypos, 0);
+
+  while (queue_size(&pq) != 0) {
+    queue_pop(&pq, &x, &y, &c);
+    get_neighbors(x, y, neighbors);
+
+    for (i = 0; i < 8; i++) {
+      temp_c = c + (d->hardness_map[y][x] / 85) + 1;
+
+      if (neighbors[i].x != 0 && neighbors[i].x != DUNGEON_X &&
+          neighbors[i].y != 0 && neighbors[i].y != DUNGEON_Y &&
+          temp_c < d->cost_t_map[neighbors[i].y][neighbors[i].x] &&
+          d->hardness_map[neighbors[i].y][neighbors[i].x] != 255) {
+        d->cost_t_map[neighbors[i].y][neighbors[i].x] = temp_c;
+        queue_push(&pq, neighbors[i].x, neighbors[i].y, temp_c);
+      }
+    }
+  }
+  queue_delete(&pq);
 }

@@ -3,10 +3,13 @@
 
 #include "character.hpp"
 #include "heap.hpp"
+#include "item.hpp"
+#include "priority_queue.hpp"
 #include <cstdint>
 
 #define DUNGEON_X 80
 #define DUNGEON_Y 21
+#define PC_RADIUS 4
 
 typedef struct stair {
   char direction;
@@ -44,6 +47,7 @@ public:
   char terrain_map[DUNGEON_Y][DUNGEON_X];
   uint8_t hardness_map[DUNGEON_Y][DUNGEON_X];
   character *character_map[DUNGEON_Y][DUNGEON_X];
+  item *item_map[DUNGEON_Y][DUNGEON_X];
   char pc_map[DUNGEON_Y][DUNGEON_X];
   int cost_t_map[DUNGEON_Y][DUNGEON_X];
   int cost_nt_map[DUNGEON_Y][DUNGEON_X];
@@ -72,5 +76,15 @@ private:
   void add_PC(point_t pc);
   void init_pc_map(point_t pc);
 };
+
+typedef struct neighbor {
+  uint8_t x;
+  uint8_t y;
+  int c;
+} neighbor_t;
+
+void get_neighbors(uint8_t x, uint8_t y, neighbor_t arr[]);
+void non_tunneling_path(dungeon *d, point_t pc);
+void tunneling_path(dungeon *d, point_t pc);
 
 #endif

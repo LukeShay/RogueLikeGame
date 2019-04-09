@@ -6,6 +6,8 @@
 
 #include "character_utils.hpp"
 
+#define MIN_NUM_MONS 10
+
 int can_see_PC(character *npc, character *pc) {
   int x = 10, y = 4;
 
@@ -418,10 +420,41 @@ void pc_init(character *pc_char, point_t pc, int num_lives) {
   pc_char->y = pc.ypos;
 }
 
-void generate_monsters(dungeon *d, heap_t *mh, std::vector<character> *mv) {
-  for (std::vector<character>::iterator it = mv->begin(); it != mv->end();
+void generate_monsters(dungeon *d, heap_t *mh,
+                       std::vector<character_desc> *mv) {
+  int rand_num, num_mons = 0, min_mons = rand() % 3 + MIN_NUM_MONS;
+  character *c;
+
+not_enough_monsters:
+  for (std::vector<character_desc>::iterator it = mv->begin(); it != mv->end();
        it++) {
-    std::cout << "Name: " << it->name << std::endl;
+    rand_num = rand() % 100;
+    if (rand_num < it->rarity) {
+      c = new character;
+
+      c->name = it->name;
+      c->color = it->color;
+      c->desc = it->desc;
+      c->abilities = it->parse_abilities();
+      c->symbol = it->symbol;
+      c->speed = it->speed.roll_dice();
+      c->hp = it->hp.roll_dice();
+      c->ad.parse_dice(it->ad.form);
+      c->p = 1000 / c->speed;
+      c->direction = rand() % 4;
+
+      c->pick_location(d->character_map, d->hardness_map);
+
+      // heap_insert(mh, c);
+      num_mons++;
+    }
+    if (num_mons > min_mons + 5) {
+      break;
+    }
+  }
+
+  if (num_mons < min_mons) {
+    goto not_enough_monsters;
   }
 }
 

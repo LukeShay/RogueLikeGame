@@ -30,13 +30,12 @@
 #define SPECIAL_ATTR "ATTR"
 #define ARTIFACT_STATUS "ART"
 
-void parse_monsters(std::vector<character> *mv) {
+void parse_monsters(std::vector<character_desc> *mv) {
   int valid = 1, monster = 1;
   char *directory = getenv("HOME");
   char *path =
       (char *)malloc(strlen(directory) + strlen(MONSTER_FILE_PATH) + 1);
-  character npc;
-  dice temp_dice;
+  character_desc npc;
 
   strcpy(path, directory);
   strcat(path, MONSTER_FILE_PATH);
@@ -83,20 +82,17 @@ void parse_monsters(std::vector<character> *mv) {
         f.get();
         getline(f, str);
 
-        temp_dice.parse_dice(str);
-        npc.speed = temp_dice.roll_dice();
+        npc.speed.parse_dice(str);
       } else if (!str.compare(DAMAGE)) {
         f.get();
         getline(f, str);
 
-        temp_dice.parse_dice(str);
-        npc.ad = temp_dice.roll_dice();
+        npc.ad.parse_dice(str);
       } else if (!str.compare(HITPOINTS)) {
         f.get();
         getline(f, str);
 
-        temp_dice.parse_dice(str);
-        npc.hp = temp_dice.roll_dice();
+        npc.hp.parse_dice(str);
       } else if (!str.compare(RARITY)) {
         f.get();
         getline(f, str);
@@ -118,12 +114,11 @@ void parse_monsters(std::vector<character> *mv) {
   mv->shrink_to_fit();
 }
 
-void parse_items(std::vector<item> *iv) {
+void parse_items(std::vector<item_desc> *iv) {
   int valid = 1, object = 1;
   char *directory = getenv("HOME");
   char *path = (char *)malloc(strlen(directory) + strlen(ITEM_FILE_PATH) + 1);
-  item obj;
-  dice temp_dice;
+  item_desc obj;
 
   strcpy(path, directory);
   strcat(path, ITEM_FILE_PATH);
@@ -171,67 +166,62 @@ void parse_items(std::vector<item> *iv) {
       } else if (!str.compare(WEIGHT)) {
         f.get();
         getline(f, str);
-        temp_dice.parse_dice(str);
+        obj.weight.parse_dice(str);
 
-        obj.weight = temp_dice.roll_dice();
       } else if (!str.compare(HIT_BONUS)) {
         f.get();
         getline(f, str);
-        temp_dice.parse_dice(str);
+        obj.hit_bonus.parse_dice(str);
 
-        obj.hit_bonus = temp_dice.roll_dice();
       } else if (!str.compare(DAMAGE_BONUS)) {
         f.get();
         getline(f, str);
-        temp_dice.parse_dice(str);
+        obj.damage_bonus.parse_dice(str);
 
-        obj.damage_bonus = temp_dice.roll_dice();
       } else if (!str.compare(RARITY)) {
         f.get();
         getline(f, str);
 
         obj.rarity = std::stoi(str);
+
       } else if (!str.compare(SPECIAL_ATTR)) {
         f.get();
         getline(f, str);
 
-        temp_dice.parse_dice(str);
-        obj.special_attr = temp_dice.roll_dice();
+        obj.special_attr.parse_dice(str);
+
       } else if (!str.compare(VALUE)) {
         f.get();
         getline(f, str);
 
-        temp_dice.parse_dice(str);
-        obj.value = temp_dice.roll_dice();
+        obj.value.parse_dice(str);
+
       } else if (!str.compare(DODGE_BONUS)) {
         f.get();
         getline(f, str);
-        temp_dice.parse_dice(str);
+        obj.dodge_bonus.parse_dice(str);
 
-        obj.dodge_bonus = temp_dice.roll_dice();
       } else if (!str.compare(WEIGHT)) {
         f.get();
         getline(f, str);
-        temp_dice.parse_dice(str);
+        obj.weight.parse_dice(str);
 
-        obj.weight = temp_dice.roll_dice();
       } else if (!str.compare(DEFENSE_BONUS)) {
         f.get();
         getline(f, str);
-        temp_dice.parse_dice(str);
+        obj.defense_bonus.parse_dice(str);
 
-        obj.defense_bonus = temp_dice.roll_dice();
       } else if (!str.compare(SPEED_BONUS)) {
         f.get();
         getline(f, str);
-        temp_dice.parse_dice(str);
+        obj.speed_bonus.parse_dice(str);
 
-        obj.speed_bonus = temp_dice.roll_dice();
       } else if (!str.compare(ARTIFACT_STATUS)) {
         f.get();
         getline(f, str);
 
         obj.artifact_status = str;
+
       } else if (!str.compare(END)) {
         f.get();
         getline(f, str);
@@ -244,7 +234,7 @@ void parse_items(std::vector<item> *iv) {
   iv->shrink_to_fit();
 }
 
-void parse(std::vector<character> *mv, std::vector<item> *iv) {
+void parse(std::vector<character_desc> *mv, std::vector<item_desc> *iv) {
   parse_monsters(mv);
   parse_items(iv);
 }

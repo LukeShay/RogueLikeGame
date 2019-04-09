@@ -1,6 +1,7 @@
 #ifndef CHARACTER_HPP
 #define CHARACTER_HPP
 
+#include "dice.hpp"
 #include <string>
 
 #define SMART 0x00000001
@@ -15,7 +16,7 @@
 #define DUNGEON_X 80
 #define DUNGEON_Y 21
 
-#define has_characteristic(_character, bit) (_character & bit)
+#define has_characteristic(characte, bit) (characte & bit)
 
 class character {
 public:
@@ -27,8 +28,7 @@ public:
   char symbol;
   int speed;
   int hp;
-  int ad;
-  int rarity;
+  dice ad;
   int p;
   int direction;
 
@@ -36,6 +36,21 @@ public:
   ~character();
   void pick_location(character *character_map[DUNGEON_Y][DUNGEON_X],
                      uint8_t hardness_map[DUNGEON_Y][DUNGEON_X]);
+};
+
+class character_desc {
+public:
+  std::string name;
+  std::string color;
+  std::string desc;
+  std::string abilities;
+  char symbol;
+  dice speed;
+  dice hp;
+  dice ad;
+  int rarity;
+
+  int parse_abilities();
 };
 
 #endif

@@ -3,7 +3,7 @@
 #include <curses.h>
 #include <string>
 
-#include "user_interface.hpp"
+#include "io.hpp"
 
 #define MOVE_INVALID 0
 #define MOVE_VALID 1
@@ -85,33 +85,31 @@ const char *gg =
 const char *quitter = "\"Champions don't quit.\" - Mike Tython\n\n\n           "
                       "           (Formally known as \'Mike Tyson\')";
 
-int valid_move(dungeon_space_t dungeon[][DUNGEON_X],
-               character_t *character_map[][DUNGEON_X], uint8_t x, uint8_t y,
-               character_t *pc) {
-  if (dungeon[y][x].hardness != 0)
+int valid_move(dungeon *d, uint8_t x, uint8_t y, character *pc) {
+  if (d->hardness_map[y][x] != 0)
     return MOVE_INVALID;
 
-  if (character_map[y][x]) {
-    character_map[y][x]->lives = 0;
+  if (d->character_map[y][x]) {
+    d->character_map[y][x]->hp = 0;
   }
 
-  character_map[pc->location.ypos][pc->location.xpos] = NULL;
-  pc->location.ypos = y;
-  pc->location.xpos = x;
+  d->character_map[pc->y][pc->x] = NULL;
+  pc->y = y;
+  pc->x = x;
 
-  character_map[y][x] = pc;
+  d->character_map[y][x] = pc;
 
   return MOVE_VALID;
 }
 
-int valid_stair(dungeon_space_t dungeon[][DUNGEON_X], character_t *pc, char s) {
-  if (s == dungeon[pc->location.ypos][pc->location.xpos].terrain)
+int valid_stair(dungeon *d, character *pc, char s) {
+  if (s == d->terrain_map[pc->y][pc->x])
     return MOVE_STAIR;
   else
     return MOVE_INVALID;
 }
 
-int list_monsters(character_t *character_map[][DUNGEON_X], character_t *pc) {
+int list_monsters(dungeon *d, character *pc) {
   std::string arr = "0123456789abcdef@";
   int i, j, k, num_initial = 0, num, print_start = 26, c = INT_MAX,
                num_on_screen, max_lines = 17;
@@ -139,27 +137,25 @@ int list_monsters(character_t *character_map[][DUNGEON_X], character_t *pc) {
 
     for (i = 0; i < DUNGEON_Y; i++) {
       for (j = 0; j < DUNGEON_X; j++) {
-        if (character_map[i][j] &&
-            !has_characteristic(character_map[i][j]->characteristic, PC)) {
+        if (d->character_map[i][j] &&
+            !has_characteristic(d->character_map[i][j]->abilities, PC)) {
           if (num >= num_initial) {
             num_on_screen++;
             k++;
 
             mvprintw(k, print_start,
-                     "%c:", arr[character_map[i][j]->characteristic]);
+                     "%c:", arr[d->character_map[i][j]->abilities]);
 
-            if (i - pc->location.ypos < 0) {
-              mvprintw(k, print_start + 2, "%3d north, ",
-                       pc->location.ypos - i);
+            if (i - pc->y < 0) {
+              mvprintw(k, print_start + 2, "%3d north, ", pc->y - i);
             } else {
-              mvprintw(k, print_start + 2, "%3d south, ",
-                       i - pc->location.ypos);
+              mvprintw(k, print_start + 2, "%3d south, ", i - pc->y);
             }
 
-            if (j - pc->location.xpos < 0) {
-              mvprintw(k, print_start + 13, "%2d west", pc->location.xpos - j);
+            if (j - pc->x < 0) {
+              mvprintw(k, print_start + 13, "%2d west", pc->x - j);
             } else {
-              mvprintw(k, print_start + 13, "%2d east", j - pc->location.xpos);
+              mvprintw(k, print_start + 13, "%2d east", j - pc->x);
             }
           } else {
             num++;
@@ -178,9 +174,7 @@ int list_monsters(character_t *character_map[][DUNGEON_X], character_t *pc) {
   return 0;
 }
 
-void render_dungeon_teleport(dungeon_space_t dungeon[][DUNGEON_X],
-                             character_t *character_map[][DUNGEON_X],
-                             character_t *pc, heap_t *mh, int fog) {
+void render_dungeon_teleport(dungeon *d, character *pc, heap_t *mh, int fog) {
   int x, y, i;
   std::string symbol = "0123456789abcdef@";
 
@@ -192,42 +186,40 @@ void render_dungeon_teleport(dungeon_space_t dungeon[][DUNGEON_X],
 
     for (y = 0; y < DUNGEON_Y; y++) {
       for (x = 0; x < DUNGEON_X; x++) {
-        if (x == pc->location.xpos && y == pc->location.ypos) {
+        if (x == pc->x && y == pc->y) {
           i = CYAN;
 
           attron(COLOR_PAIR(i));
           mvaddch(y + 1, x, symbol[16]);
           attroff(COLOR_PAIR(i));
         } else {
-          if (character_map[y][x] && character_map[y][x] != pc) {
+          if (d->character_map[y][x] && d->character_map[y][x] != pc) {
             i = RED;
 
             attron(COLOR_PAIR(i));
-            mvaddch(y + 1, x, symbol[character_map[y][x]->characteristic]);
+            mvaddch(y + 1, x, symbol[d->character_map[y][x]->abilities]);
             attroff(COLOR_PAIR(i));
           } else {
-            mvaddch(y + 1, x, dungeon[y][x].terrain);
+            mvaddch(y + 1, x, d->terrain_map[y][x]);
           }
         }
       }
     }
 
-    mvprintw(DISPLAY_MAX_Y - 1, DISPLAY_MAX_X - 9, "Lives: %2d", pc->lives);
+    mvprintw(DISPLAY_MAX_Y - 1, DISPLAY_MAX_X - 9, "Lives: %2d", pc->hp);
     mvprintw(DISPLAY_MAX_Y, DISPLAY_MAX_X - 12, "Monsters: %2d", mh->size);
 
     refresh();
   }
 }
 
-void teleport_pc(dungeon_space_t dungeon[][DUNGEON_X],
-                 character_t *character_map[][DUNGEON_X], character_t *pc,
-                 heap_t *mh, int fog) {
+void teleport_pc(dungeon *d, character *pc, heap_t *mh, int fog) {
   int c;
   int new_x, new_y;
 
-  character_map[pc->location.ypos][pc->location.xpos] = NULL;
+  d->character_map[pc->y][pc->x] = NULL;
 
-  render_dungeon_teleport(dungeon, character_map, pc, mh, 0);
+  render_dungeon_teleport(d, pc, mh, 0);
   attron(COLOR_PAIR(RED));
   mvprintw(0, 0, "Teleporting                  ");
   attroff(COLOR_PAIR(RED));
@@ -237,57 +229,57 @@ void teleport_pc(dungeon_space_t dungeon[][DUNGEON_X],
     case 'y':
     case '7':
     case KEY_HOME:
-      new_x = pc->location.xpos - 1;
-      new_y = pc->location.ypos - 1;
+      new_x = pc->x - 1;
+      new_y = pc->y - 1;
       goto move;
 
     case 'k':
     case '8':
     case KEY_UP:
-      new_x = pc->location.xpos;
-      new_y = pc->location.ypos - 1;
+      new_x = pc->x;
+      new_y = pc->y - 1;
       goto move;
 
     case 'u':
     case '9':
     case KEY_PPAGE:
-      new_x = pc->location.xpos + 1;
-      new_y = pc->location.ypos - 1;
+      new_x = pc->x + 1;
+      new_y = pc->y - 1;
       goto move;
 
     case 'l':
     case '6':
     case KEY_RIGHT:
-      new_x = pc->location.xpos + 1;
-      new_y = pc->location.ypos;
+      new_x = pc->x + 1;
+      new_y = pc->y;
       goto move;
 
     case 'n':
     case '3':
     case KEY_NPAGE:
-      new_x = pc->location.xpos + 1;
-      new_y = pc->location.ypos + 1;
+      new_x = pc->x + 1;
+      new_y = pc->y + 1;
       goto move;
 
     case 'j':
     case '2':
     case KEY_DOWN:
-      new_x = pc->location.xpos;
-      new_y = pc->location.ypos + 1;
+      new_x = pc->x;
+      new_y = pc->y + 1;
       goto move;
 
     case 'b':
     case '1':
     case KEY_END:
-      new_x = pc->location.xpos - 1;
-      new_y = pc->location.ypos + 1;
+      new_x = pc->x - 1;
+      new_y = pc->y + 1;
       goto move;
 
     case 'h':
     case '4':
     case KEY_LEFT:
-      new_x = pc->location.xpos - 1;
-      new_y = pc->location.ypos;
+      new_x = pc->x - 1;
+      new_y = pc->y;
       goto move;
 
     case 'r':
@@ -298,13 +290,13 @@ void teleport_pc(dungeon_space_t dungeon[][DUNGEON_X],
   move:
     if (new_y < 20 && new_y > 0 && new_x < 79 && new_x > 0) {
 
-      pc->location.ypos = new_y;
-      pc->location.xpos = new_x;
+      pc->y = new_y;
+      pc->x = new_x;
 
       if (c == 'r')
         goto done;
     }
-    render_dungeon_teleport(dungeon, character_map, pc, mh, 0);
+    render_dungeon_teleport(d, pc, mh, 0);
     attron(COLOR_PAIR(RED));
     mvprintw(0, 0, "Teleporting                  ");
     attroff(COLOR_PAIR(RED));
@@ -312,18 +304,16 @@ void teleport_pc(dungeon_space_t dungeon[][DUNGEON_X],
 
 done:
 
-  if (character_map[pc->location.ypos][pc->location.xpos]) {
-    character_map[pc->location.ypos][pc->location.xpos]->lives = 0;
+  if (d->character_map[pc->y][pc->x]) {
+    d->character_map[pc->y][pc->x]->hp = 0;
   }
 
-  character_map[pc->location.ypos][pc->location.xpos] = pc;
+  d->character_map[pc->y][pc->x] = pc;
 
-  render_dungeon(dungeon, character_map, pc, mh, fog);
+  render_dungeon(d, pc, mh, fog);
 }
 
-int move_pc(dungeon_space_t dungeon[][DUNGEON_X],
-            character_t *character_map[][DUNGEON_X], character_t *pc,
-            heap_t *mh, int fog) {
+int move_pc(dungeon *d, character *pc, heap_t *mh, int fog) {
   int c = getch();
   uint8_t new_x, new_y;
 
@@ -331,58 +321,58 @@ int move_pc(dungeon_space_t dungeon[][DUNGEON_X],
   case 'y':
   case '7':
   case KEY_HOME:
-    new_x = pc->location.xpos - 1;
-    new_y = pc->location.ypos - 1;
-    return valid_move(dungeon, character_map, new_x, new_y, pc);
+    new_x = pc->x - 1;
+    new_y = pc->y - 1;
+    return valid_move(d, new_x, new_y, pc);
 
   case 'k':
   case '8':
   case KEY_UP:
-    new_x = pc->location.xpos;
-    new_y = pc->location.ypos - 1;
-    return valid_move(dungeon, character_map, new_x, new_y, pc);
+    new_x = pc->x;
+    new_y = pc->y - 1;
+    return valid_move(d, new_x, new_y, pc);
 
   case 'u':
   case '9':
   case KEY_PPAGE:
-    new_x = pc->location.xpos + 1;
-    new_y = pc->location.ypos - 1;
-    return valid_move(dungeon, character_map, new_x, new_y, pc);
+    new_x = pc->x + 1;
+    new_y = pc->y - 1;
+    return valid_move(d, new_x, new_y, pc);
 
   case 'l':
   case '6':
   case KEY_RIGHT:
-    new_x = pc->location.xpos + 1;
-    new_y = pc->location.ypos;
-    return valid_move(dungeon, character_map, new_x, new_y, pc);
+    new_x = pc->x + 1;
+    new_y = pc->y;
+    return valid_move(d, new_x, new_y, pc);
 
   case 'n':
   case '3':
   case KEY_NPAGE:
-    new_x = pc->location.xpos + 1;
-    new_y = pc->location.ypos + 1;
-    return valid_move(dungeon, character_map, new_x, new_y, pc);
+    new_x = pc->x + 1;
+    new_y = pc->y + 1;
+    return valid_move(d, new_x, new_y, pc);
 
   case 'j':
   case '2':
   case KEY_DOWN:
-    new_x = pc->location.xpos;
-    new_y = pc->location.ypos + 1;
-    return valid_move(dungeon, character_map, new_x, new_y, pc);
+    new_x = pc->x;
+    new_y = pc->y + 1;
+    return valid_move(d, new_x, new_y, pc);
 
   case 'b':
   case '1':
   case KEY_END:
-    new_x = pc->location.xpos - 1;
-    new_y = pc->location.ypos + 1;
-    return valid_move(dungeon, character_map, new_x, new_y, pc);
+    new_x = pc->x - 1;
+    new_y = pc->y + 1;
+    return valid_move(d, new_x, new_y, pc);
 
   case 'h':
   case '4':
   case KEY_LEFT:
-    new_x = pc->location.xpos - 1;
-    new_y = pc->location.ypos;
-    return valid_move(dungeon, character_map, new_x, new_y, pc);
+    new_x = pc->x - 1;
+    new_y = pc->y;
+    return valid_move(d, new_x, new_y, pc);
 
   case '5':
   case ' ':
@@ -392,26 +382,26 @@ int move_pc(dungeon_space_t dungeon[][DUNGEON_X],
 
   case '>':
   case '<':
-    return valid_stair(dungeon, pc, (char)c);
+    return valid_stair(d, pc, (char)c);
 
   case 'm':
-    list_monsters(character_map, pc);
-    render_dungeon(dungeon, character_map, pc, mh, fog);
+    list_monsters(d, pc);
+    render_dungeon(d, pc, mh, fog);
     return LIST_MONSTERS;
 
   case 'T':
-    display_tunneling_map(dungeon);
-    render_dungeon(dungeon, character_map, pc, mh, fog);
+    display_tunneling_map(d);
+    render_dungeon(d, pc, mh, fog);
     return TUNNELING_MAP;
 
   case 'D':
-    display_non_tunneling_map(dungeon);
-    render_dungeon(dungeon, character_map, pc, mh, fog);
+    display_non_tunneling_map(d);
+    render_dungeon(d, pc, mh, fog);
     return NON_TUNNELING_MAP;
 
   case 's':
-    display_default_map(dungeon);
-    render_dungeon(dungeon, character_map, pc, mh, fog);
+    display_default_map(d);
+    render_dungeon(d, pc, mh, fog);
     return DEFAULT_MAP;
 
   case 'q':
@@ -421,7 +411,7 @@ int move_pc(dungeon_space_t dungeon[][DUNGEON_X],
     return FOG_TOGGLE;
 
   case 't':
-    teleport_pc(dungeon, character_map, pc, mh, fog);
+    teleport_pc(d, pc, mh, fog);
     return TELEPORT;
 
   default:
@@ -453,9 +443,7 @@ void invalid_key() {
   attroff(COLOR_PAIR(RED));
 }
 
-void render_dungeon(dungeon_space_t dungeon[][DUNGEON_X],
-                    character_t *character_map[][DUNGEON_X], character_t *pc,
-                    heap_t *mh, int fog) {
+void render_dungeon(dungeon *d, character *pc, heap_t *mh, int fog) {
   int x, y, i;
   std::string symbol = "0123456789abcdef@";
 
@@ -468,47 +456,42 @@ void render_dungeon(dungeon_space_t dungeon[][DUNGEON_X],
     for (y = 0; y < DUNGEON_Y; y++) {
       for (x = 0; x < DUNGEON_X; x++) {
         if (fog) {
-          if (character_map[y][x] && y >= pc->location.ypos - PC_RADIUS &&
-              y <= pc->location.ypos + PC_RADIUS &&
-              x >= pc->location.xpos - PC_RADIUS &&
-              x <= pc->location.xpos + PC_RADIUS) {
-            i = has_characteristic(character_map[y][x]->characteristic, PC)
-                    ? CYAN
-                    : RED;
+          if (d->character_map[y][x] && y >= pc->y - PC_RADIUS &&
+              y <= pc->y + PC_RADIUS && x >= pc->x - PC_RADIUS &&
+              x <= pc->x + PC_RADIUS) {
+            i = has_characteristic(d->character_map[y][x]->abilities, PC) ? CYAN
+                                                                          : RED;
 
             attron(COLOR_PAIR(i));
-            mvaddch(y + 1, x, symbol[character_map[y][x]->characteristic]);
+            mvaddch(y + 1, x, symbol[d->character_map[y][x]->abilities]);
             attroff(COLOR_PAIR(i));
 
           } else {
-            mvaddch(y + 1, x, dungeon[y][x].pc_map);
+            mvaddch(y + 1, x, d->pc_map[y][x]);
           }
         } else {
-          if (character_map[y][x]) {
-            i = has_characteristic(character_map[y][x]->characteristic, PC)
-                    ? CYAN
-                    : RED;
+          if (d->character_map[y][x]) {
+            i = has_characteristic(d->character_map[y][x]->abilities, PC) ? CYAN
+                                                                          : RED;
 
             attron(COLOR_PAIR(i));
-            mvaddch(y + 1, x, symbol[character_map[y][x]->characteristic]);
+            mvaddch(y + 1, x, symbol[d->character_map[y][x]->abilities]);
             attroff(COLOR_PAIR(i));
           } else {
-            mvaddch(y + 1, x, dungeon[y][x].terrain);
+            mvaddch(y + 1, x, d->terrain_map[y][x]);
           }
         }
       }
     }
 
-    mvprintw(DISPLAY_MAX_Y - 1, DISPLAY_MAX_X - 9, "Lives: %2d", pc->lives);
+    mvprintw(DISPLAY_MAX_Y - 1, DISPLAY_MAX_X - 9, "Lives: %2d", pc->hp);
     mvprintw(DISPLAY_MAX_Y, DISPLAY_MAX_X - 12, "Monsters: %2d", mh->size);
 
     refresh();
   }
 }
 
-void render_dungeon_first(dungeon_space_t dungeon[][DUNGEON_X],
-                          character_t *character_map[][DUNGEON_X],
-                          character_t *pc, heap_t *mh, int fog) {
+void render_dungeon_first(dungeon *d, character *pc, heap_t *mh, int fog) {
   int x, y, i;
   std::string symbol = "0123456789abcdef@";
 
@@ -521,70 +504,67 @@ void render_dungeon_first(dungeon_space_t dungeon[][DUNGEON_X],
     for (y = 0; y < DUNGEON_Y; y++) {
       for (x = 0; x < DUNGEON_X; x++) {
         if (fog) {
-          if (character_map[y][x] && y >= pc->location.ypos - PC_RADIUS &&
-              y <= pc->location.ypos + PC_RADIUS &&
-              x >= pc->location.xpos - PC_RADIUS &&
-              x <= pc->location.xpos + PC_RADIUS) {
-            i = has_characteristic(character_map[y][x]->characteristic, PC)
-                    ? CYAN
-                    : RED;
+          if (d->character_map[y][x] && y >= pc->y - PC_RADIUS &&
+              y <= pc->y + PC_RADIUS && x >= pc->x - PC_RADIUS &&
+              x <= pc->x + PC_RADIUS) {
+            i = has_characteristic(d->character_map[y][x]->abilities, PC) ? CYAN
+                                                                          : RED;
 
             attron(COLOR_PAIR(i));
-            mvaddch(y + 1, x, symbol[character_map[y][x]->characteristic]);
+            mvaddch(y + 1, x, symbol[d->character_map[y][x]->abilities]);
             attroff(COLOR_PAIR(i));
 
           } else {
-            mvaddch(y + 1, x, dungeon[y][x].pc_map);
+            mvaddch(y + 1, x, d->pc_map[y][x]);
           }
         } else {
-          if (character_map[y][x]) {
-            i = has_characteristic(character_map[y][x]->characteristic, PC)
-                    ? CYAN
-                    : RED;
+          if (d->character_map[y][x]) {
+            i = has_characteristic(d->character_map[y][x]->abilities, PC) ? CYAN
+                                                                          : RED;
 
             attron(COLOR_PAIR(i));
-            mvaddch(y + 1, x, symbol[character_map[y][x]->characteristic]);
+            mvaddch(y + 1, x, symbol[d->character_map[y][x]->abilities]);
             attroff(COLOR_PAIR(i));
           } else {
-            mvaddch(y + 1, x, dungeon[y][x].terrain);
+            mvaddch(y + 1, x, d->terrain_map[y][x]);
           }
         }
       }
     }
 
-    mvprintw(DISPLAY_MAX_Y - 1, DISPLAY_MAX_X - 9, "Lives: %2d", pc->lives);
+    mvprintw(DISPLAY_MAX_Y - 1, DISPLAY_MAX_X - 9, "Lives: %2d", pc->hp);
     mvprintw(DISPLAY_MAX_Y, DISPLAY_MAX_X - 12, "Monsters: %2d", mh->size - 1);
 
     refresh();
   }
 }
 
-void display_tunneling_map(dungeon_space_t dungeon[][DUNGEON_X]) {
+void display_tunneling_map(dungeon *d) {
   int x, y, c;
 
   do {
     clear();
     for (y = 0; y < DUNGEON_Y; y++) {
       for (x = 0; x < DUNGEON_X; x++) {
-        mvprintw(y + 1, x, "%d", dungeon[y][x].cost_t % 10);
+        mvprintw(y + 1, x, "%d", d->cost_t_map[y][x] % 10);
       }
     }
     refresh();
   } while ((c = getch()) != 27);
 }
 
-void display_non_tunneling_map(dungeon_space_t dungeon[][DUNGEON_X]) {
+void display_non_tunneling_map(dungeon *d) {
   int x, y, c;
 
   do {
     clear();
     for (y = 0; y < DUNGEON_Y; y++) {
       for (x = 0; x < DUNGEON_X; x++) {
-        if (dungeon[y][x].cost_nt == INT_MAX) {
+        if (d->cost_nt_map[y][x] == INT_MAX) {
           mvaddch(y + 1, x, ' ');
 
         } else {
-          mvprintw(y + 1, x, "%d", dungeon[y][x].cost_nt % 10);
+          mvprintw(y + 1, x, "%d", d->cost_nt_map[y][x] % 10);
         }
       }
     }
@@ -592,14 +572,14 @@ void display_non_tunneling_map(dungeon_space_t dungeon[][DUNGEON_X]) {
   } while ((c = getch()) != 27);
 }
 
-void display_default_map(dungeon_space_t dungeon[][DUNGEON_X]) {
+void display_default_map(dungeon *d) {
   int x, y, c;
 
   do {
     clear();
     for (y = 0; y < DUNGEON_Y; y++) {
       for (x = 0; x < DUNGEON_X; x++) {
-        mvaddch(y + 1, x, dungeon[y][x].terrain);
+        mvaddch(y + 1, x, d->terrain_map[y][x]);
       }
     }
     refresh();

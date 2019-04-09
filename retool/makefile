@@ -1,10 +1,10 @@
 CXX = g++
-FILES = rlg327.cpp dungeon.cpp priority_queue.cpp path.cpp character_utils.cpp heap.cpp dice.cpp character.cpp parser.cpp item.cpp
+FILES = rlg327.cpp dungeon.cpp priority_queue.cpp character_utils.cpp heap.cpp dice.cpp character.cpp parser.cpp item.cpp io.cpp item_utils.cpp
 
 RM = rm -rf
 
 CXXFLAGS = -Wall -ggdb3 #-Werror
-LDFLAGS = #-lncurses
+LDFLAGS = -lncurses
 ECHO = echo
 
 rlg327: $(FILES)
