@@ -36,10 +36,6 @@
 
 #define hardnesspair(pair) (hardness_map[pair[dim_y]][pair[dim_x]])
 
-int32_t monster_cmp(const void *key, const void *with) {
-  return ((character *)key)->p - ((character *)with)->p;
-}
-
 int32_t corridor_path_cmp(const void *key, const void *with) {
   return ((corridor_path_t *)key)->cost - ((corridor_path_t *)with)->cost;
 }
@@ -67,7 +63,6 @@ dungeon::dungeon(character *pc_char, int num_lives, int num_mon,
   this->character_map[pc_char->y][pc_char->x] = pc_char;
 
   init_pc_map(pc);
-  update_pc_map(pc);
   tunneling_path(this, pc);
   non_tunneling_path(this, pc);
 }

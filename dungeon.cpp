@@ -32,10 +32,6 @@
 #define FILE_SEMANTIC "RLG327-S2019"
 #define FILE_PATH "/.rlg327/dungeon"
 
-int32_t monster_cmp(const void *key, const void *with) {
-  return ((character_t *)key)->p - ((character_t *)with)->p;
-}
-
 int32_t corridor_path_cmp(const void *key, const void *with) {}
 
 static int count_num_spaces(dungeon *d) {

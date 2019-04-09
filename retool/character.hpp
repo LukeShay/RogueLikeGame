@@ -12,9 +12,11 @@
 #define PICKUP 0x00000020
 #define DESTROY 0x00000040
 #define UNIQ 0x00000080
-#define PC 0x00000100
+#define BOSS 0x00000100
+#define PC 0x00000200
 #define DUNGEON_X 80
 #define DUNGEON_Y 21
+#define MOVEMENT_ABILITIES 15
 
 #define has_characteristic(characte, bit) (characte & bit)
 
@@ -49,6 +51,7 @@ public:
   dice hp;
   dice ad;
   int rarity;
+  int placed; // 1 if placed. Only used for unique
 
   int parse_abilities();
 };

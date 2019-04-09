@@ -429,7 +429,7 @@ not_enough_monsters:
   for (std::vector<character_desc>::iterator it = mv->begin(); it != mv->end();
        it++) {
     rand_num = rand() % 100;
-    if (rand_num < it->rarity) {
+    if (rand_num < it->rarity && it->placed != 1) {
       c = new character;
 
       c->name = it->name;
@@ -445,8 +445,12 @@ not_enough_monsters:
 
       c->pick_location(d->character_map, d->hardness_map);
 
-      // heap_insert(mh, c);
+      heap_insert(mh, c);
       num_mons++;
+
+      if (has_characteristic(c->abilities, UNIQ)) {
+        it->placed = 1;
+      }
     }
     if (num_mons > min_mons + 5) {
       break;
@@ -477,5 +481,5 @@ void npc_erratic(character *npc, dungeon *d, character *pc) {
 }
 
 void move_monster(dungeon *d, character *to_move, character *pc) {
-  npc_move_func[to_move->abilities](to_move, d, pc);
+  npc_move_func[0](to_move, d, pc); // to_move->abilities & MOVEMENT_ABILITIES
 }

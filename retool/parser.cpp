@@ -55,22 +55,23 @@ void parse_monsters(std::vector<character_desc> *mv) {
 
     while (!monster) {
       f >> str;
+      f.get();
       if (!str.compare(NAME)) {
-        f.get();
+
         getline(f, str);
 
         npc.name = str;
       } else if (!str.compare(SYMBOL)) {
         getline(f, str);
-        npc.symbol = str[1];
+        npc.symbol = str[0];
 
       } else if (!str.compare(COLOR)) {
-        f.get();
+
         getline(f, str);
 
         npc.color = str;
       } else if (!str.compare(DESCRIPTION)) {
-        f.get();
+
         getline(f, str);
 
         while (str.compare(".")) {
@@ -79,31 +80,31 @@ void parse_monsters(std::vector<character_desc> *mv) {
           getline(f, str);
         }
       } else if (!str.compare(SPEED)) {
-        f.get();
+
         getline(f, str);
 
         npc.speed.parse_dice(str);
       } else if (!str.compare(DAMAGE)) {
-        f.get();
+
         getline(f, str);
 
         npc.ad.parse_dice(str);
       } else if (!str.compare(HITPOINTS)) {
-        f.get();
+
         getline(f, str);
 
         npc.hp.parse_dice(str);
       } else if (!str.compare(RARITY)) {
-        f.get();
+
         getline(f, str);
 
         npc.rarity = std::stoi(str);
       } else if (!str.compare(ABILITIES)) {
-        f.get();
-        getline(f, str);
 
+        getline(f, str);
+        npc.abilities = str;
       } else if (!str.compare(END)) {
-        f.get();
+
         getline(f, str);
 
         monster = 1;
@@ -138,24 +139,24 @@ void parse_items(std::vector<item_desc> *iv) {
 
     while (!object) {
       f >> str;
-
+      f.get();
       if (!str.compare(NAME)) {
-        f.get();
+
         getline(f, str);
 
         obj.name = str;
       } else if (!str.compare(TYPE)) {
-        f.get();
+
         getline(f, str);
 
         obj.type = str;
       } else if (!str.compare(COLOR)) {
-        f.get();
+
         getline(f, str);
 
         obj.color = str;
       } else if (!str.compare(DESCRIPTION)) {
-        f.get();
+
         getline(f, str);
 
         while (str.compare(".")) {
@@ -164,66 +165,66 @@ void parse_items(std::vector<item_desc> *iv) {
           getline(f, str);
         }
       } else if (!str.compare(WEIGHT)) {
-        f.get();
+
         getline(f, str);
         obj.weight.parse_dice(str);
 
       } else if (!str.compare(HIT_BONUS)) {
-        f.get();
+
         getline(f, str);
         obj.hit_bonus.parse_dice(str);
 
       } else if (!str.compare(DAMAGE_BONUS)) {
-        f.get();
+
         getline(f, str);
         obj.damage_bonus.parse_dice(str);
 
       } else if (!str.compare(RARITY)) {
-        f.get();
+
         getline(f, str);
 
         obj.rarity = std::stoi(str);
 
       } else if (!str.compare(SPECIAL_ATTR)) {
-        f.get();
+
         getline(f, str);
 
         obj.special_attr.parse_dice(str);
 
       } else if (!str.compare(VALUE)) {
-        f.get();
+
         getline(f, str);
 
         obj.value.parse_dice(str);
 
       } else if (!str.compare(DODGE_BONUS)) {
-        f.get();
+
         getline(f, str);
         obj.dodge_bonus.parse_dice(str);
 
       } else if (!str.compare(WEIGHT)) {
-        f.get();
+
         getline(f, str);
         obj.weight.parse_dice(str);
 
       } else if (!str.compare(DEFENSE_BONUS)) {
-        f.get();
+
         getline(f, str);
         obj.defense_bonus.parse_dice(str);
 
       } else if (!str.compare(SPEED_BONUS)) {
-        f.get();
+
         getline(f, str);
         obj.speed_bonus.parse_dice(str);
 
       } else if (!str.compare(ARTIFACT_STATUS)) {
-        f.get();
+
         getline(f, str);
 
         obj.artifact_status = str;
 
       } else if (!str.compare(END)) {
-        f.get();
+
         getline(f, str);
         object = 1;
 
