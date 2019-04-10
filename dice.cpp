@@ -1,28 +1,23 @@
-#include "dice.h"
+#include "dice.hpp"
 
-dice::dice(){}
+dice::dice() {}
 
-dice::dice(int base, int num, int sides)
-{
+dice::dice(int base, int num, int sides) {
   this->base = base;
   this->num = num;
   this->sides = sides;
 
-  this->form = "" + std::to_string(base) + '+' + std::to_string(num) + 'd' + std::to_string(sides);
+  this->form = "" + std::to_string(base) + '+' + std::to_string(num) + 'd' +
+               std::to_string(sides);
 }
 
-void dice::parse_dice(std::string s)
-{
+void dice::parse_dice(std::string s) {
   int i, plus, d;
 
-  for (i = 0; i < s.length(); i++)
-  {
-    if (s.at(i) == '+')
-    {
+  for (i = 0; i < s.length(); i++) {
+    if (s.at(i) == '+') {
       plus = i;
-    }
-    else if (s.at(i) == 'd')
-    {
+    } else if (s.at(i) == 'd') {
       d = i;
     }
   }
@@ -32,4 +27,14 @@ void dice::parse_dice(std::string s)
   this->sides = std::stoi(s.substr(d + 1));
 
   this->form = s;
+}
+
+int dice::roll_dice() {
+  int num = this->base, i;
+
+  for (i = 0; i < this->num; i++) {
+    num += rand() % this->sides + 1;
+  }
+
+  return num;
 }

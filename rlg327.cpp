@@ -1,14 +1,16 @@
-#include <cstdio>
-#include <cstdlib>
-#include <string>
-#include <ctime>
-#include <queue>
+#include "character_utils.hpp"
+#include "dungeon.hpp"
+#include "heap.hpp"
+#include "io.hpp"
+#include "item_utils.hpp"
+#include "parser.hpp"
 
-#include "characters.h"
-#include "dungeon.h"
-#include "user_interface.h"
-#include "npc.h"
-#include "monster_parser.h"
+#include <cstdlib>
+#include <curses.h>
+#include <fstream>
+#include <iostream>
+#include <unistd.h>
+#include <vector>
 
 #define MOVE_INVALID 0
 #define MOVE_VALID 1
@@ -24,120 +26,66 @@
 #define FOG_TOGGLE 11
 #define TELEPORT 12
 
-char *print_characters(const void *v) {
-  static char out[2000];
-  std::string arr = "0123456789abcdef@";
-  character_t mon = *((character_t *)v);
+using namespace std;
 
-  snprintf(out, 2000,
-           "Char: %c  Speed: %2d  xpos: %2d  ypos: %2d  p: %d  lives: %d",
-           arr[mon.characteristic], mon.speed, mon.location.xpos,
-           mon.location.ypos, mon.p, mon.lives);
-
-  return out;
+int32_t monster_cmp(const void *key, const void *with) {
+  return ((character *)key)->p - ((character *)with)->p;
 }
 
-int32_t npc_cmp(const void *key, const void *with)
-{
-  return ((npc *)key)->p - ((npc *)with)->p;
-}
-
-int main(int argc, char *argv[]) {
-  heap_t mh;
-
-  heap_init(&mh, npc_cmp, NULL);
-
-  parse_monsters(&mh);
-  /* dungeon_space_t dungeon[DUNGEON_Y][DUNGEON_X];
-  character_t *character_map[DUNGEON_Y][DUNGEON_X],
-      *pc = (character_t *)malloc(sizeof(*pc)), *temp;
-  heap_t mh;
-  int move = 0, num_mon = 0, fog = 1;
-  action_t action;
-
-  if (argc > 5) {
-    fprintf(stderr,
-            "No flags are necessary but the following can be used:\n"
-            "Usage: %s <--save|--load|--save --load|--load --save> \n  Can be "
-            "added as an option: <--nummon 'int'>\n",
-            argv[0]);
-    return -1;
-  }
-
-  if (argc == 1) {
-    action = save;
-
-  } else if (!strcmp(argv[1], "--save")) {
-    action = save;
-
-    if (argc == 3 && !strcmp(argv[2], "--load")) {
-      action = loadSave;
-
-    } else if (argc == 4 && !strcmp(argv[2], "--nummon")) {
-      num_mon = atoi(argv[3]);
-      action = savenummon;
-
-    } else if (argc == 5 && !strcmp(argv[2], "--load") &&
-               !strcmp(argv[3], "--nummon")) {
-      num_mon = atoi(argv[4]);
-      action = loadSavenummon;
-
-    } else if (argc != 2) {
-      fprintf(stderr, "Invalid command line parameter: %s %s\n", argv[1],
-              argv[2]);
-      return -1;
-    }
-  } else if (!strcmp(argv[1], "--load")) {
-    action = load;
-
-    if (argc == 3 && !strcmp(argv[2], "--save")) {
-      action = loadSave;
-
-    } else if (argc == 4 && !strcmp(argv[2], "--nummon")) {
-      num_mon = atoi(argv[3]);
-      action = loadnummon;
-
-    } else if (argc == 5 && !strcmp(argv[2], "--save") &&
-               !strcmp(argv[3], "--nummon")) {
-      num_mon = atoi(argv[4]);
-      action = loadSavenummon;
-
-    } else if (argc != 2) {
-      fprintf(stderr, "Invalid command line parameter: %s\n", argv[1]);
-      return -1;
-    }
-
-  } else if(!strcmp(argv[1], "--nummon")){
-    if(argc == 3){
-      action = savenummon;
-      num_mon = atoi(argv[2]);
-    }
-    else {
-      fprintf(stderr, "Invalid command line parameter: %s", argv[1]);
-      return -1;
-    }
-
-  } else {
-    action = save;
-  }
-
+int main(void) {
   srand(time(NULL));
 
-  first_dungeon(dungeon, character_map, &mh, pc, 3, num_mon, action);
+  vector<character_desc> mv;
+  int fog = 0, move, lives = 10;
+  vector<item_desc> iv;
+
+  ofstream file;
+  file.open("test.txt");
+
+  parse(&mv, &iv);
+
+new_dung:
+
+  character *pc;
+  dungeon *d;
+  heap_t mh;
+  character *mon;
+
+  move = 0;
+  pc = new character;
+  d = new dungeon(pc, lives, 10, save);
+  heap_init(&mh, monster_cmp, NULL);
+
+  heap_insert(&mh, pc);
+
+  pc->abilities = PC;
+
+  std::vector<item_desc>::iterator it;
+
+  /*  for (it = iv.begin(); it != iv.end(); it++) {
+      file << "|" << it->type << "|" << endl;
+    }*/
+
+  generate_monsters(d, &mh, &mv);
+  generate_items(d, &iv);
 
   io_init_terminal();
-  render_dungeon_first(dungeon, character_map, pc, &mh, fog);
+  render_dungeon_first(d, pc, &mh, fog);
 
-  while ((temp = (character_t *)heap_remove_min(&mh))) {
-    if (has_characteristic(temp->characteristic, PC)) {
+  while ((mon = (character *)heap_remove_min(&mh))) {
+    if (has_characteristic(mon->abilities, PC)) {
       if (mh.size == 0) {
         game_over(WIN);
-        break;
+        goto over;
+      } else if (pc->hp == 0) {
+        getch();
+        game_over(LOSE);
+        goto over;
       }
 
       while (move == MOVE_INVALID || move >= INVALID_KEY) {
-        move = move_pc(dungeon, character_map, temp, &mh, fog);
-        update_pc_map(dungeon, temp->location);
+        move = move_pc(d, mon, &mh, fog);
+        d->update_pc_map(mon->x, mon->y);
 
         if (move == MOVE_INVALID) {
           invalid_move();
@@ -146,56 +94,52 @@ int main(int argc, char *argv[]) {
           invalid_key();
 
         } else if (move == MOVE_STAIR) {
-          int lives = pc->lives;
+          lives = pc->hp;
+          // heap_delete(&mh);
+          // delete pc;
+          // d->~dungeon();
+          // delete d;
 
-          new_dungeon(dungeon, character_map, &mh, pc, lives, num_mon, action);
-          update_pc_map(dungeon, temp->location);
-          render_dungeon_first(dungeon, character_map, pc, &mh, fog);
           goto new_dung;
 
         } else if (move == QUIT) {
           game_over(QUIT);
           goto over;
 
-        } else if (move == FOG_TOGGLE){
+        } else if (move == FOG_TOGGLE) {
           fog = fog == 1 ? 0 : 1;
 
-          render_dungeon(dungeon, character_map, pc, &mh, fog);
+          render_dungeon(d, pc, &mh, fog);
 
         } else {
-          render_dungeon(dungeon, character_map, pc, &mh, fog);
+          render_dungeon(d, pc, &mh, fog);
         }
       }
 
-    } else if (temp->lives != 0) {
-      move_character(dungeon, character_map, temp, pc);
+    } else if (mon->hp != 0) {
+      move_monster(d, mon, pc);
     }
 
-    if (pc->lives == 0) {
-      game_over(LOSE);
-      goto over;
-    }
+    mon->p += (1000 / mon->speed);
 
-    temp->p += (1000 / temp->speed);
-
-    if (temp->lives > 0) {
-      heap_insert(&mh, temp);
+    if (mon->hp > 0) {
+      heap_insert(&mh, mon);
 
     } else {
-      free(temp);
+      delete mon;
     }
 
-    new_dung: move = 0;
+    move = 0;
 
-    non_tunneling_path(dungeon, pc->location);
-    tunneling_path(dungeon, pc->location);
+    non_tunneling_path(d, pc->x, pc->y);
+    tunneling_path(d, pc->x, pc->y);
   }
 
-  over:
+over:
 
-  free(pc);
-
-  heap_delete(&mh); */
+  // delete pc;
+  delete d;
+  file.close();
 
   return 0;
 }

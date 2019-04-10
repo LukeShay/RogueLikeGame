@@ -1,4 +1,4 @@
-#include "priority_queue.h"
+#include "priority_queue.hpp"
 #include <cstdlib>
 
 int queue_init(queue_t *q) {
@@ -79,7 +79,7 @@ int queue_pop(queue_t *q, uint8_t *x, uint8_t *y, int *c) {
 
   q->size--;
 
-  if(temp){
+  if (temp) {
     free(temp);
   }
 
