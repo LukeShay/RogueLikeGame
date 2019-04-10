@@ -28,8 +28,8 @@ int character_desc::parse_abilities() {
   int ret_ability = 0, start, end;
   std::string temp;
 
-  for (start = end = 0; end <= this->abilities.length(); end++) {
-    if (end == this->abilities.length() || abilities[end] == ' ') {
+  for (start = end = 0; end <= (int)this->abilities.length(); end++) {
+    if (end == (int)this->abilities.length() || abilities[end] == ' ') {
       temp = abilities.substr(start, end - start);
       start = end + 1;
 

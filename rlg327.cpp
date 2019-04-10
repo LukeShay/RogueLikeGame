@@ -60,9 +60,9 @@ new_dung:
 
   pc->abilities = PC;
 
-  std::vector<item_desc>::iterator it;
+  /* std::vector<item_desc>::iterator it;
 
-  /*  for (it = iv.begin(); it != iv.end(); it++) {
+   for (it = iv.begin(); it != iv.end(); it++) {
       file << "|" << it->type << "|" << endl;
     }*/
 

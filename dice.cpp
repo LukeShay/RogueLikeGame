@@ -14,7 +14,7 @@ dice::dice(int base, int num, int sides) {
 void dice::parse_dice(std::string s) {
   int i, plus, d;
 
-  for (i = 0; i < s.length(); i++) {
+  for (i = 0; i < (int)s.length(); i++) {
     if (s.at(i) == '+') {
       plus = i;
     } else if (s.at(i) == 'd') {

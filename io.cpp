@@ -1,7 +1,7 @@
 #include <climits>
 #include <cstdlib>
+#include <cstring>
 #include <curses.h>
-#include <string>
 
 #include "io.hpp"
 

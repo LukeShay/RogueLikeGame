@@ -1,0 +1,10 @@
+150b65d 2019-04-10 | Made unique monsters only spawn once even when changing floors.
+cf4489d 2019-04-10 | Fixed bug when taking stairs.
+93fe679 2019-04-10 | Finished updating dungeon rendering. Seg fault occur when taking stairs.
+d9b2815 2019-04-09 | Finished generation of monsters and items.
+27b9529 2019-04-09 | Created monster and item generator. Having issues with the items not storing the symbol.
+3c80da0 2019-04-08 | Created item parser. Created item class. Retooled dungeon into an object. Created a function to roll dice.
+78b424f 2019-04-03 | Finished fixing bugs in the monster parser.
+5a7d0be 2019-04-02 | Finished basics of the monster parser. Need to workout bugs.
+15a1b73 2019-04-02 | Created dice and new npc class.
+dd24e92 2019-04-01 | Initial commit

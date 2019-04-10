@@ -1,5 +1,6 @@
 #include "dice.hpp"
 #include "parser.hpp"
+#include <cstring>
 #include <fstream>
 #include <iostream>
 
