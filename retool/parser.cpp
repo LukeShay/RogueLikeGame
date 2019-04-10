@@ -108,6 +108,7 @@ void parse_monsters(std::vector<character_desc> *mv) {
         getline(f, str);
 
         monster = 1;
+        npc.placed = 0;
         mv->push_back(npc);
       }
     }

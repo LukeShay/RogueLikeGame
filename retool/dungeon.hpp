@@ -54,7 +54,7 @@ public:
 
   dungeon(character *pc_char, int num_lives, int num_mon, action_t action);
   ~dungeon();
-  void update_pc_map(point_t pc);
+  void update_pc_map(int px, int py);
 
 private:
   int save_dungeon(room_t rooms[], stair_t upStairs[], stair_t downStairs[],
@@ -84,7 +84,7 @@ typedef struct neighbor {
 } neighbor_t;
 
 void get_neighbors(uint8_t x, uint8_t y, neighbor_t arr[]);
-void non_tunneling_path(dungeon *d, point_t pc);
-void tunneling_path(dungeon *d, point_t pc);
+void non_tunneling_path(dungeon *d, int xp, int yp);
+void tunneling_path(dungeon *d, int xp, int yp);
 
 #endif

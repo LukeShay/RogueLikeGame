@@ -45,7 +45,7 @@ dungeon::dungeon(character *pc_char, int num_lives, int num_mon,
   point_t pc;
 
   if (action == save || action == savenummon || action == num_mon) {
-    pc = generate_dungeon(); // TODO: Change to be named save_dungeon.
+    pc = generate_dungeon();
   } else if (action == load || action == loadnummon) {
     pc = load_dungeon();
   } else if (action == loadSave || action == loadSavenummon) {
@@ -57,14 +57,11 @@ dungeon::dungeon(character *pc_char, int num_lives, int num_mon,
 
   pc_init(pc_char, pc, num_lives);
 
-  pc_char->x = pc.xpos;
-  pc_char->y = pc.ypos;
-
   this->character_map[pc_char->y][pc_char->x] = pc_char;
 
   init_pc_map(pc);
-  tunneling_path(this, pc);
-  non_tunneling_path(this, pc);
+  tunneling_path(this, pc.xpos, pc.ypos);
+  non_tunneling_path(this, pc.xpos, pc.ypos);
 }
 
 dungeon::~dungeon() {
@@ -73,6 +70,10 @@ dungeon::~dungeon() {
     for (x = 0; x < DUNGEON_X; x++) {
       if (character_map[y][x]) {
         delete character_map[y][x];
+      }
+
+      if (item_map[y][x]) {
+        delete item_map[y][x];
       }
     }
   }
@@ -120,11 +121,11 @@ point_t dungeon::generate_dungeon() {
   return pc;
 }
 
-void dungeon::update_pc_map(point_t pc) {
+void dungeon::update_pc_map(int px, int py) {
   int x, y;
 
-  for (y = pc.ypos - PC_RADIUS; y <= pc.ypos + PC_RADIUS; y++) {
-    for (x = pc.xpos - PC_RADIUS; x <= pc.xpos + PC_RADIUS; x++) {
+  for (y = py - PC_RADIUS; y <= py + PC_RADIUS; y++) {
+    for (x = px - PC_RADIUS; x <= px + PC_RADIUS; x++) {
       if (x < DUNGEON_X && x >= 0 && y < DUNGEON_Y && y >= 0) {
         if (this->terrain_map[y][x]) {
           this->pc_map[y][x] = this->terrain_map[y][x];
@@ -922,7 +923,7 @@ void get_neighbors(uint8_t x, uint8_t y, neighbor_t arr[]) {
   }
 }
 
-void non_tunneling_path(dungeon *d, point_t pc) {
+void non_tunneling_path(dungeon *d, int xp, int yp) {
   uint8_t i, j;
 
   for (i = 0; i < DUNGEON_Y; i++) {
@@ -931,14 +932,14 @@ void non_tunneling_path(dungeon *d, point_t pc) {
     }
   }
 
-  d->cost_nt_map[pc.ypos][pc.xpos] = 0;
+  d->cost_nt_map[yp][xp] = 0;
   uint8_t x, y;
   int c;
   neighbor_t neighbors[8];
 
   queue_t pq;
   queue_init(&pq);
-  queue_push(&pq, pc.xpos, pc.ypos, 0);
+  queue_push(&pq, xp, yp, 0);
   while (queue_size(&pq)) {
     queue_pop(&pq, &x, &y, &c);
     get_neighbors(x, y, neighbors);
@@ -955,7 +956,7 @@ void non_tunneling_path(dungeon *d, point_t pc) {
   queue_delete(&pq);
 }
 
-void tunneling_path(dungeon *d, point_t pc) {
+void tunneling_path(dungeon *d, int xp, int yp) {
   uint8_t i, j;
   uint8_t x, y;
   int c;
@@ -969,10 +970,10 @@ void tunneling_path(dungeon *d, point_t pc) {
     }
   }
 
-  d->cost_t_map[pc.ypos][pc.xpos] = 0;
+  d->cost_t_map[yp][xp] = 0;
 
   queue_init(&pq);
-  queue_push(&pq, pc.xpos, pc.ypos, 0);
+  queue_push(&pq, xp, yp, 0);
 
   while (queue_size(&pq) != 0) {
     queue_pop(&pq, &x, &y, &c);

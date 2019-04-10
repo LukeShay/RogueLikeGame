@@ -411,10 +411,13 @@ void place_monster(character *c, dungeon *d, int num_spaces, int num_mon) {
 }
 
 void pc_init(character *pc_char, point_t pc, int num_lives) {
-  pc_char->abilities = 16;
+  pc_char->abilities = 128;
   pc_char->speed = 10;
   pc_char->p = 10;
   pc_char->hp = num_lives;
+  pc_char->name = "PC";
+  pc_char->symbol = '@';
+  pc_char->color = "CYAN";
 
   pc_char->x = pc.xpos;
   pc_char->y = pc.ypos;
@@ -448,11 +451,11 @@ not_enough_monsters:
       heap_insert(mh, c);
       num_mons++;
 
-      if (has_characteristic(c->abilities, UNIQ)) {
+      if ((c->abilities & UNIQ)) {
         it->placed = 1;
       }
     }
-    if (num_mons > min_mons + 5) {
+    if (num_mons > min_mons) {
       break;
     }
   }

@@ -22,8 +22,31 @@
 #define DISPLAY_MAX_Y 23
 #define DISPLAY_MAX_X 79
 
-#define RED 1
-#define CYAN 2
+typedef enum item_type {
+  not_valid,
+  weapon,
+  offhand,
+  ranged,
+  armor,
+  helmet,
+  cloak,
+  gloves,
+  boots,
+  ring,
+  amulet,
+  light,
+  scroll_i,
+  book,
+  flask,
+  gold,
+  ammunition,
+  food,
+  wand,
+  container,
+  stack
+} item_type_t;
+
+const std::string symbol = "*|)}[]({\\=\"_~?!$/,-\%&";
 
 const char *victory =
     "\n                                       o\n"
@@ -85,6 +108,52 @@ const char *gg =
 const char *quitter = "\"Champions don't quit.\" - Mike Tython\n\n\n           "
                       "           (Formally known as \'Mike Tyson\')";
 
+int item_symbol(item *i) {
+  if (i->type.compare("WEAPON")) {
+    return weapon;
+  } else if (i->type.compare("OFFHAND")) {
+    return offhand;
+  } else if (i->type.compare("RANGED")) {
+    return ranged;
+  } else if (i->type.compare("ARMOR")) {
+    return armor;
+  } else if (i->type.compare("HELMET")) {
+    return helmet;
+  } else if (i->type.compare("CLOAK")) {
+    return cloak;
+  } else if (i->type.compare("GLOVES")) {
+    return gloves;
+  } else if (i->type.compare("BOOTS")) {
+    return boots;
+  } else if (i->type.compare("RING")) {
+    return ring;
+  } else if (i->type.compare("AMULET")) {
+    return amulet;
+  } else if (i->type.compare("LIGHT")) {
+    return light;
+  } else if (i->type.compare("SCROLL")) {
+    return scroll_i;
+  } else if (i->type.compare("BOOK")) {
+    return book;
+  } else if (i->type.compare("FLASK")) {
+    return flask;
+  } else if (i->type.compare("GOLD")) {
+    return gold;
+  } else if (i->type.compare("AMMUNITION")) {
+    return ammunition;
+  } else if (i->type.compare("FOOD")) {
+    return food;
+  } else if (i->type.compare("WAND")) {
+    return wand;
+  } else if (i->type.compare("CONTAINER")) {
+    return container;
+  } else if (i->type.compare("STACK")) {
+    return stack;
+  } else {
+    return not_valid;
+  }
+}
+
 int valid_move(dungeon *d, uint8_t x, uint8_t y, character *pc) {
   if (d->hardness_map[y][x] != 0)
     return MOVE_INVALID;
@@ -110,7 +179,6 @@ int valid_stair(dungeon *d, character *pc, char s) {
 }
 
 int list_monsters(dungeon *d, character *pc) {
-  std::string arr = "0123456789abcdef@";
   int i, j, k, num_initial = 0, num, print_start = 26, c = INT_MAX,
                num_on_screen, max_lines = 17;
 
@@ -143,8 +211,7 @@ int list_monsters(dungeon *d, character *pc) {
             num_on_screen++;
             k++;
 
-            mvprintw(k, print_start,
-                     "%c:", arr[d->character_map[i][j]->abilities]);
+            mvprintw(k, print_start, "%c:", d->character_map[i][j]->symbol);
 
             if (i - pc->y < 0) {
               mvprintw(k, print_start + 2, "%3d north, ", pc->y - i);
@@ -175,8 +242,7 @@ int list_monsters(dungeon *d, character *pc) {
 }
 
 void render_dungeon_teleport(dungeon *d, character *pc, heap_t *mh, int fog) {
-  int x, y, i;
-  std::string symbol = "0123456789abcdef@";
+  int x, y;
 
   if (mh->size == 0)
     game_over(WIN);
@@ -187,18 +253,16 @@ void render_dungeon_teleport(dungeon *d, character *pc, heap_t *mh, int fog) {
     for (y = 0; y < DUNGEON_Y; y++) {
       for (x = 0; x < DUNGEON_X; x++) {
         if (x == pc->x && y == pc->y) {
-          i = CYAN;
 
-          attron(COLOR_PAIR(i));
-          mvaddch(y + 1, x, symbol[16]);
-          attroff(COLOR_PAIR(i));
+          attron(COLOR_PAIR(COLOR_CYAN));
+          mvaddch(y + 1, x, '@');
+          attroff(COLOR_PAIR(COLOR_CYAN));
         } else {
           if (d->character_map[y][x] && d->character_map[y][x] != pc) {
-            i = RED;
 
-            attron(COLOR_PAIR(i));
-            mvaddch(y + 1, x, symbol[d->character_map[y][x]->abilities]);
-            attroff(COLOR_PAIR(i));
+            attron(COLOR_PAIR(COLOR_RED));
+            mvaddch(y + 1, x, d->character_map[y][x]->symbol);
+            attroff(COLOR_PAIR(COLOR_RED));
           } else {
             mvaddch(y + 1, x, d->terrain_map[y][x]);
           }
@@ -220,9 +284,9 @@ void teleport_pc(dungeon *d, character *pc, heap_t *mh, int fog) {
   d->character_map[pc->y][pc->x] = NULL;
 
   render_dungeon_teleport(d, pc, mh, 0);
-  attron(COLOR_PAIR(RED));
+  attron(COLOR_PAIR(COLOR_RED));
   mvprintw(0, 0, "Teleporting                  ");
-  attroff(COLOR_PAIR(RED));
+  attroff(COLOR_PAIR(COLOR_RED));
 
   while ((c = getch()) != 't') {
     switch (c) {
@@ -297,9 +361,9 @@ void teleport_pc(dungeon *d, character *pc, heap_t *mh, int fog) {
         goto done;
     }
     render_dungeon_teleport(d, pc, mh, 0);
-    attron(COLOR_PAIR(RED));
+    attron(COLOR_PAIR(COLOR_RED));
     mvprintw(0, 0, "Teleporting                  ");
-    attroff(COLOR_PAIR(RED));
+    attroff(COLOR_PAIR(COLOR_RED));
   }
 
 done:
@@ -427,25 +491,30 @@ void io_init_terminal() {
   keypad(stdscr, TRUE);
 
   start_color();
-  init_pair(1, COLOR_RED, COLOR_BLACK);
-  init_pair(2, COLOR_CYAN, COLOR_BLACK);
+  init_pair(COLOR_RED, COLOR_RED, COLOR_BLACK);
+  init_pair(COLOR_CYAN, COLOR_CYAN, COLOR_BLACK);
+  init_pair(COLOR_BLUE, COLOR_BLUE, COLOR_BLACK);
+  init_pair(COLOR_YELLOW, COLOR_YELLOW, COLOR_BLACK);
+  init_pair(COLOR_WHITE, COLOR_WHITE, COLOR_BLACK);
+  init_pair(COLOR_BLACK, COLOR_WHITE, COLOR_BLACK);
+  init_pair(COLOR_GREEN, COLOR_GREEN, COLOR_BLACK);
+  init_pair(COLOR_MAGENTA, COLOR_MAGENTA, COLOR_BLACK);
 }
 
 void invalid_move() {
-  attron(COLOR_PAIR(RED));
+  attron(COLOR_PAIR(COLOR_RED));
   mvprintw(0, 0, "Cannot move to that location!");
-  attroff(COLOR_PAIR(RED));
+  attroff(COLOR_PAIR(COLOR_RED));
 }
 
 void invalid_key() {
-  attron(COLOR_PAIR(RED));
+  attron(COLOR_PAIR(COLOR_RED));
   mvprintw(0, 0, "Invalid key.                 ");
-  attroff(COLOR_PAIR(RED));
+  attroff(COLOR_PAIR(COLOR_RED));
 }
 
 void render_dungeon(dungeon *d, character *pc, heap_t *mh, int fog) {
   int x, y, i;
-  std::string symbol = "0123456789abcdef@";
 
   if (mh->size == 0)
     game_over(WIN);
@@ -459,24 +528,65 @@ void render_dungeon(dungeon *d, character *pc, heap_t *mh, int fog) {
           if (d->character_map[y][x] && y >= pc->y - PC_RADIUS &&
               y <= pc->y + PC_RADIUS && x >= pc->x - PC_RADIUS &&
               x <= pc->x + PC_RADIUS) {
-            i = has_characteristic(d->character_map[y][x]->abilities, PC) ? CYAN
-                                                                          : RED;
+
+            if (!d->character_map[y][x]->color.compare("RED")) {
+              i = COLOR_RED;
+            } else if (!d->character_map[y][x]->color.compare("BLUE")) {
+              i = COLOR_BLUE;
+            } else if (!d->character_map[y][x]->color.compare("MAGENTA")) {
+              i = COLOR_MAGENTA;
+            } else if (!d->character_map[y][x]->color.compare("YELLOW")) {
+              i = COLOR_YELLOW;
+            } else if (!d->character_map[y][x]->color.compare("BLACK")) {
+              i = COLOR_BLACK;
+            } else if (!d->character_map[y][x]->color.compare("CYAN")) {
+              i = COLOR_CYAN;
+            } else if (!d->character_map[y][x]->color.compare("GREEN")) {
+              i = COLOR_GREEN;
+            } else {
+              i = COLOR_WHITE;
+            }
 
             attron(COLOR_PAIR(i));
-            mvaddch(y + 1, x, symbol[d->character_map[y][x]->abilities]);
+            mvaddch(y + 1, x, d->character_map[y][x]->symbol);
             attroff(COLOR_PAIR(i));
+
+          } else if (d->item_map[y][x] && y >= pc->y - PC_RADIUS &&
+                     y <= pc->y + PC_RADIUS && x >= pc->x - PC_RADIUS &&
+                     x <= pc->x + PC_RADIUS) {
+            mvaddch(y + 1, x, symbol[item_symbol(d->item_map[y][x])]);
 
           } else {
             mvaddch(y + 1, x, d->pc_map[y][x]);
           }
         } else {
           if (d->character_map[y][x]) {
-            i = has_characteristic(d->character_map[y][x]->abilities, PC) ? CYAN
-                                                                          : RED;
+            if (!d->character_map[y][x]->color.compare("RED")) {
+              i = COLOR_RED;
+            } else if (!d->character_map[y][x]->color.compare("BLUE")) {
+              i = COLOR_BLUE;
+            } else if (!d->character_map[y][x]->color.compare("MAGENTA")) {
+              i = COLOR_MAGENTA;
+            } else if (!d->character_map[y][x]->color.compare("YELLOW")) {
+              i = COLOR_YELLOW;
+            } else if (!d->character_map[y][x]->color.compare("BLACK")) {
+              i = COLOR_BLACK;
+            } else if (!d->character_map[y][x]->color.compare("CYAN")) {
+              i = COLOR_CYAN;
+            } else if (!d->character_map[y][x]->color.compare("GREEN")) {
+              i = COLOR_GREEN;
+            } else {
+              i = COLOR_WHITE;
+            }
 
             attron(COLOR_PAIR(i));
-            mvaddch(y + 1, x, symbol[d->character_map[y][x]->abilities]);
+            mvaddch(y + 1, x, d->character_map[y][x]->symbol);
             attroff(COLOR_PAIR(i));
+          } else if (d->item_map[y][x] && y >= pc->y - PC_RADIUS &&
+                     y <= pc->y + PC_RADIUS && x >= pc->x - PC_RADIUS &&
+                     x <= pc->x + PC_RADIUS) {
+            mvaddch(y + 1, x, symbol[item_symbol(d->item_map[y][x])]);
+
           } else {
             mvaddch(y + 1, x, d->terrain_map[y][x]);
           }
@@ -493,7 +603,6 @@ void render_dungeon(dungeon *d, character *pc, heap_t *mh, int fog) {
 
 void render_dungeon_first(dungeon *d, character *pc, heap_t *mh, int fog) {
   int x, y, i;
-  std::string symbol = "0123456789abcdef@";
 
   if (mh->size == 0)
     game_over(WIN);
@@ -507,24 +616,64 @@ void render_dungeon_first(dungeon *d, character *pc, heap_t *mh, int fog) {
           if (d->character_map[y][x] && y >= pc->y - PC_RADIUS &&
               y <= pc->y + PC_RADIUS && x >= pc->x - PC_RADIUS &&
               x <= pc->x + PC_RADIUS) {
-            i = has_characteristic(d->character_map[y][x]->abilities, PC) ? CYAN
-                                                                          : RED;
+            if (!d->character_map[y][x]->color.compare("RED")) {
+              i = COLOR_RED;
+            } else if (!d->character_map[y][x]->color.compare("BLUE")) {
+              i = COLOR_BLUE;
+            } else if (!d->character_map[y][x]->color.compare("MAGENTA")) {
+              i = COLOR_MAGENTA;
+            } else if (!d->character_map[y][x]->color.compare("YELLOW")) {
+              i = COLOR_YELLOW;
+            } else if (!d->character_map[y][x]->color.compare("BLACK")) {
+              i = COLOR_BLACK;
+            } else if (!d->character_map[y][x]->color.compare("CYAN")) {
+              i = COLOR_CYAN;
+            } else if (!d->character_map[y][x]->color.compare("GREEN")) {
+              i = COLOR_GREEN;
+            } else {
+              i = COLOR_WHITE;
+            }
 
             attron(COLOR_PAIR(i));
-            mvaddch(y + 1, x, symbol[d->character_map[y][x]->abilities]);
+            mvaddch(y + 1, x, d->character_map[y][x]->symbol);
             attroff(COLOR_PAIR(i));
+
+          } else if (d->item_map[y][x] && y >= pc->y - PC_RADIUS &&
+                     y <= pc->y + PC_RADIUS && x >= pc->x - PC_RADIUS &&
+                     x <= pc->x + PC_RADIUS) {
+            mvaddch(y + 1, x, symbol[item_symbol(d->item_map[y][x])]);
 
           } else {
             mvaddch(y + 1, x, d->pc_map[y][x]);
           }
         } else {
           if (d->character_map[y][x]) {
-            i = has_characteristic(d->character_map[y][x]->abilities, PC) ? CYAN
-                                                                          : RED;
+            if (!d->character_map[y][x]->color.compare("RED")) {
+              i = COLOR_RED;
+            } else if (!d->character_map[y][x]->color.compare("BLUE")) {
+              i = COLOR_BLUE;
+            } else if (!d->character_map[y][x]->color.compare("MAGENTA")) {
+              i = COLOR_MAGENTA;
+            } else if (!d->character_map[y][x]->color.compare("YELLOW")) {
+              i = COLOR_YELLOW;
+            } else if (!d->character_map[y][x]->color.compare("BLACK")) {
+              i = COLOR_BLACK;
+            } else if (!d->character_map[y][x]->color.compare("CYAN")) {
+              i = COLOR_CYAN;
+            } else if (!d->character_map[y][x]->color.compare("GREEN")) {
+              i = COLOR_GREEN;
+            } else {
+              i = COLOR_WHITE;
+            }
 
             attron(COLOR_PAIR(i));
-            mvaddch(y + 1, x, symbol[d->character_map[y][x]->abilities]);
+            mvaddch(y + 1, x, d->character_map[y][x]->symbol);
             attroff(COLOR_PAIR(i));
+          } else if (d->item_map[y][x] && y >= pc->y - PC_RADIUS &&
+                     y <= pc->y + PC_RADIUS && x >= pc->x - PC_RADIUS &&
+                     x <= pc->x + PC_RADIUS) {
+            mvaddch(y + 1, x, symbol[item_symbol(d->item_map[y][x])]);
+
           } else {
             mvaddch(y + 1, x, d->terrain_map[y][x]);
           }

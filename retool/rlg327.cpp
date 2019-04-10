@@ -1,6 +1,7 @@
 #include "character_utils.hpp"
 #include "dungeon.hpp"
 #include "heap.hpp"
+#include "io.hpp"
 #include "item_utils.hpp"
 #include "parser.hpp"
 
@@ -9,109 +10,127 @@
 #include <unistd.h>
 #include <vector>
 
-using namespace std;
+#define MOVE_INVALID 0
+#define MOVE_VALID 1
+#define MOVE_STAIR 2
+#define QUIT 3
+#define WIN 4
+#define LOSE 5
+#define INVALID_KEY 6
+#define LIST_MONSTERS 7
+#define TUNNELING_MAP 8
+#define NON_TUNNELING_MAP 9
+#define DEFAULT_MAP 10
+#define FOG_TOGGLE 11
+#define TELEPORT 12
 
-typedef enum item_type {
-  not_valid,
-  weapon,
-  offhand,
-  ranged,
-  armor,
-  helmet,
-  cloack,
-  gloves,
-  boots,
-  ring,
-  amulet,
-  light,
-  scroll,
-  book,
-  flask,
-  gold,
-  ammunition,
-  food,
-  wand,
-  container,
-  stack
-} item_type_t;
+using namespace std;
 
 int32_t monster_cmp(const void *key, const void *with) {
   return ((character *)key)->p - ((character *)with)->p;
 }
 
-const std::string item_symbol = "*|)}[]({\\=\"_~?!$/,-\%&";
-
 int main(void) {
   srand(time(NULL));
 
-  character *pc = new character;
-  pc->name = "PC";
-  pc->abilities = PC;
-  pc->symbol = '@';
-  pc->speed = 10;
-
-  dungeon *d = new dungeon(pc, 3, 10, save);
+  character *pc;
+  dungeon *d;
   vector<character_desc> mv;
   vector<item_desc> iv;
   heap_t mh;
-  int x, y;
+  int fog = 0, move;
+  character *mon;
 
+  pc = new character;
+  d = new dungeon(pc, 10, 10, save);
   heap_init(&mh, monster_cmp, NULL);
 
   heap_insert(&mh, pc);
+
+  pc->abilities = PC;
 
   parse(&mv, &iv);
 
   generate_monsters(d, &mh, &mv);
   generate_items(d, &iv);
 
-  /*  for (y = 0; y < DUNGEON_Y; y++) {
-      for (x = 0; x < DUNGEON_X; x++) {
-        if (d->character_map[y][x]) {
-          cout << x << ", " << y << " " << d->character_map[y][x]->name << endl;
-        }
-      }
-    }
-
-    for (y = 0; y < DUNGEON_Y; y++) {
-      for (x = 0; x < DUNGEON_X; x++) {
-        if (d->item_map[y][x]) {
-          cout << x << ", " << y << " " << d->item_map[y][x]->name << endl;
-        }
-      }
-    }*/
-
-  character *mon;
+  io_init_terminal();
+  render_dungeon_first(d, pc, &mh, fog);
 
   while ((mon = (character *)heap_remove_min(&mh))) {
-    if (mon != pc) {
-      move_monster(d, mon, pc);
-    } else if (!mon->hp) {
-      break;
-    }
+    if (has_characteristic(mon->abilities, PC)) {
+      if (mh.size == 0) {
+        game_over(WIN);
+        break;
+      }
 
-    for (y = 0; y < DUNGEON_Y; y++) {
-      for (x = 0; x < DUNGEON_X; x++) {
-        if (d->character_map[y][x]) {
-          cout << d->character_map[y][x]->symbol;
-        } else if (d->item_map[y][x]) {
-          cout << item_symbol[stack];
+      while (move == MOVE_INVALID || move >= INVALID_KEY) {
+        move = move_pc(d, mon, &mh, fog);
+        d->update_pc_map(mon->x, mon->y);
+
+        if (move == MOVE_INVALID) {
+          invalid_move();
+
+        } else if (move == INVALID_KEY) {
+          invalid_key();
+
+        } else if (move == MOVE_STAIR) {
+          delete d;
+          d = new dungeon(pc, pc->hp, 10, save);
+
+          heap_reset(&mh);
+          heap_insert(&mh, pc);
+
+          mv.clear();
+          iv.clear();
+          parse(&mv, &iv);
+
+          generate_monsters(d, &mh, &mv);
+          generate_items(d, &iv);
+
+          render_dungeon_first(d, pc, &mh, fog);
+          goto new_dung;
+
+        } else if (move == QUIT) {
+          game_over(QUIT);
+          goto over;
+
+        } else if (move == FOG_TOGGLE) {
+          fog = fog == 1 ? 0 : 1;
+
+          render_dungeon(d, pc, &mh, fog);
+
         } else {
-          cout << d->terrain_map[y][x];
+          render_dungeon(d, pc, &mh, fog);
         }
       }
-      cout << endl;
+
+    } else if (mon->hp != 0) {
+      move_monster(d, mon, pc);
     }
 
-    if (mon->hp != 0) {
-      mon->p += 1000 / mon->speed;
+    if (pc->hp == 0) {
+      game_over(LOSE);
+      goto over;
+    }
+
+    mon->p += (1000 / mon->speed);
+
+    if (mon->hp > 0) {
       heap_insert(&mh, mon);
+
     } else {
       delete mon;
     }
 
-    usleep(1000000);
+  new_dung:
+    move = 0;
+
+    non_tunneling_path(d, pc->x, pc->y);
+    tunneling_path(d, pc->x, pc->y);
   }
+
+over:
 
   // delete pc;
   delete d;
