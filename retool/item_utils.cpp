@@ -6,10 +6,14 @@
 void generate_items(dungeon *d, std::vector<item_desc> *iv) {
   int rand_num, num_items = 0, min_items = rand() % 3 + MIN_NUM_ITEMS;
   item *i;
+  std::vector<item_desc>::iterator it;
+
+  for (it = iv->begin(); it != iv->end(); it++) {
+    it->placed = 0;
+  }
 
 not_enough_items:
-  for (std::vector<item_desc>::iterator it = iv->begin(); it != iv->end();
-       it++) {
+  for (it = iv->begin(); it != iv->end(); it++) {
     rand_num = rand() % 100;
     if (rand_num < it->rarity && it->placed != 1) {
       i = new item;
@@ -17,6 +21,7 @@ not_enough_items:
       i->name = it->name;
       i->color = it->color;
       i->desc = it->desc;
+      i->type = it->type;
       i->hit_bonus = it->hit_bonus.roll_dice();
       i->damage_bonus = it->damage_bonus.roll_dice();
       i->dodge_bonus = it->dodge_bonus.roll_dice();

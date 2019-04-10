@@ -55,6 +55,7 @@ public:
   dungeon(character *pc_char, int num_lives, int num_mon, action_t action);
   ~dungeon();
   void update_pc_map(int px, int py);
+  void clear();
 
 private:
   int save_dungeon(room_t rooms[], stair_t upStairs[], stair_t downStairs[],

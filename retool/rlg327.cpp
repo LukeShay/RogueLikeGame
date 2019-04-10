@@ -6,6 +6,8 @@
 #include "parser.hpp"
 
 #include <cstdlib>
+#include <curses.h>
+#include <fstream>
 #include <iostream>
 #include <unistd.h>
 #include <vector>
@@ -33,23 +35,36 @@ int32_t monster_cmp(const void *key, const void *with) {
 int main(void) {
   srand(time(NULL));
 
+  vector<character_desc> mv;
+  int fog = 0, move, lives = 10;
+  vector<item_desc> iv;
+
+  ofstream file;
+  file.open("test.txt");
+
+  parse(&mv, &iv);
+
+new_dung:
+
   character *pc;
   dungeon *d;
-  vector<character_desc> mv;
-  vector<item_desc> iv;
   heap_t mh;
-  int fog = 0, move;
   character *mon;
 
+  move = 0;
   pc = new character;
-  d = new dungeon(pc, 10, 10, save);
+  d = new dungeon(pc, lives, 10, save);
   heap_init(&mh, monster_cmp, NULL);
 
   heap_insert(&mh, pc);
 
   pc->abilities = PC;
 
-  parse(&mv, &iv);
+  std::vector<item_desc>::iterator it;
+
+  for (it = iv.begin(); it != iv.end(); it++) {
+    file << "|" << it->type << "|" << endl;
+  }
 
   generate_monsters(d, &mh, &mv);
   generate_items(d, &iv);
@@ -61,7 +76,11 @@ int main(void) {
     if (has_characteristic(mon->abilities, PC)) {
       if (mh.size == 0) {
         game_over(WIN);
-        break;
+        goto over;
+      } else if (pc->hp == 0) {
+        getch();
+        game_over(LOSE);
+        goto over;
       }
 
       while (move == MOVE_INVALID || move >= INVALID_KEY) {
@@ -75,20 +94,12 @@ int main(void) {
           invalid_key();
 
         } else if (move == MOVE_STAIR) {
-          delete d;
-          d = new dungeon(pc, pc->hp, 10, save);
+          lives = pc->hp;
+          // heap_delete(&mh);
+          // delete pc;
+          // d->~dungeon();
+          // delete d;
 
-          heap_reset(&mh);
-          heap_insert(&mh, pc);
-
-          mv.clear();
-          iv.clear();
-          parse(&mv, &iv);
-
-          generate_monsters(d, &mh, &mv);
-          generate_items(d, &iv);
-
-          render_dungeon_first(d, pc, &mh, fog);
           goto new_dung;
 
         } else if (move == QUIT) {
@@ -109,11 +120,6 @@ int main(void) {
       move_monster(d, mon, pc);
     }
 
-    if (pc->hp == 0) {
-      game_over(LOSE);
-      goto over;
-    }
-
     mon->p += (1000 / mon->speed);
 
     if (mon->hp > 0) {
@@ -123,7 +129,6 @@ int main(void) {
       delete mon;
     }
 
-  new_dung:
     move = 0;
 
     non_tunneling_path(d, pc->x, pc->y);
@@ -134,6 +139,7 @@ over:
 
   // delete pc;
   delete d;
+  file.close();
 
   return 0;
 }

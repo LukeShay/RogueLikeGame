@@ -993,3 +993,10 @@ void tunneling_path(dungeon *d, int xp, int yp) {
   }
   queue_delete(&pq);
 }
+
+void clear() {
+  for (int y = 0; y < DUNGEON_Y; y++) {
+    for (int x = 0; x < DUNGEON_X; x++) {
+    }
+  }
+}

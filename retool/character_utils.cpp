@@ -427,10 +427,10 @@ void generate_monsters(dungeon *d, heap_t *mh,
                        std::vector<character_desc> *mv) {
   int rand_num, num_mons = 0, min_mons = rand() % 3 + MIN_NUM_MONS;
   character *c;
+  std::vector<character_desc>::iterator it;
 
 not_enough_monsters:
-  for (std::vector<character_desc>::iterator it = mv->begin(); it != mv->end();
-       it++) {
+  for (it = mv->begin(); it != mv->end(); it++) {
     rand_num = rand() % 100;
     if (rand_num < it->rarity && it->placed != 1) {
       c = new character;
