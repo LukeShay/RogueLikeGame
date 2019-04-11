@@ -1,4 +1,5 @@
 #include "item_utils.hpp"
+#include <cstdlib>
 #include <vector>
 
 #define MIN_NUM_ITEMS 10

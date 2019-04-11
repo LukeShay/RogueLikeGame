@@ -1,5 +1,6 @@
 #include "character.hpp"
 
+#include <cstdlib>
 #include <iostream>
 
 character::character() {}

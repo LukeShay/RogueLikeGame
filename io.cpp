@@ -305,7 +305,7 @@ void render_dungeon_teleport(dungeon *d, character *pc, heap_t *mh, int fog) {
     }
   }
 
-  mvprintw(DISPLAY_MAX_Y - 1, DISPLAY_MAX_X - 9, "Lives: %2d", pc->hp);
+  mvprintw(DISPLAY_MAX_Y - 1, DISPLAY_MAX_X - 9, "   HP: %2d", pc->hp);
   mvprintw(DISPLAY_MAX_Y, DISPLAY_MAX_X - 12, "Monsters: %2d", mh->size);
 
   refresh();
@@ -662,7 +662,7 @@ void render_dungeon(dungeon *d, character *pc, heap_t *mh, int fog) {
     }
   }
 
-  mvprintw(DISPLAY_MAX_Y - 1, DISPLAY_MAX_X - 9, "Lives: %2d", pc->hp);
+  mvprintw(DISPLAY_MAX_Y - 1, DISPLAY_MAX_X - 9, "   HP: %2d", pc->hp);
   mvprintw(DISPLAY_MAX_Y, DISPLAY_MAX_X - 12, "Monsters: %2d", mh->size);
 
   refresh();
@@ -782,7 +782,7 @@ void render_dungeon_first(dungeon *d, character *pc, heap_t *mh, int fog) {
     }
   }
 
-  mvprintw(DISPLAY_MAX_Y - 1, DISPLAY_MAX_X - 9, "Lives: %2d", pc->hp);
+  mvprintw(DISPLAY_MAX_Y - 1, DISPLAY_MAX_X - 9, "   HP: %2d", pc->hp);
   mvprintw(DISPLAY_MAX_Y, DISPLAY_MAX_X - 12, "Monsters: %2d", mh->size - 1);
 
   refresh();

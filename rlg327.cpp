@@ -39,9 +39,6 @@ int main(void) {
   int fog = 0, move, lives = 10;
   vector<item_desc> iv;
 
-  ofstream file;
-  file.open("test.txt");
-
   parse(&mv, &iv);
 
 new_dung:
@@ -139,7 +136,6 @@ over:
 
   // delete pc;
   delete d;
-  file.close();
 
   return 0;
 }

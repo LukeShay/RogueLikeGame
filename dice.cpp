@@ -1,5 +1,7 @@
 #include "dice.hpp"
 
+#include <cstdlib>
+
 dice::dice() {}
 
 dice::dice(int base, int num, int sides) {

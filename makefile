@@ -3,7 +3,7 @@ FILES = rlg327.cpp dungeon.cpp priority_queue.cpp character_utils.cpp heap.cpp d
 
 RM = rm -rf
 
-CXXFLAGS = -Wall -ggdb3 -Werror -Wunused
+CXXFLAGS = -Wall -ggdb3 -std=c++0x
 LDFLAGS = -lncurses
 ECHO = echo
 
