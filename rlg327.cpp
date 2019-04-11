@@ -1,6 +1,6 @@
 #include "character_utils.hpp"
 #include "dungeon.hpp"
-#include "heap.hpp"
+#include "heap.h"
 #include "io.hpp"
 #include "item_utils.hpp"
 #include "parser.hpp"

@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "heap.hpp"
+#include "heap.h"
 
 struct heap_node {
   heap_node_t *next;

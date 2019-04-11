@@ -2,6 +2,7 @@
 #define CHARACTER_UTILS_HPP
 
 #include "dungeon.hpp"
+#include "heap.h"
 #include <vector>
 
 void generate_monsters(dungeon *d, heap_t *mh, std::vector<character_desc> *mv);

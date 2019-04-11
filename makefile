@@ -1,20 +1,46 @@
+CC = gcc
 CXX = g++
-FILES = rlg327.cpp dungeon.cpp priority_queue.cpp character_utils.cpp heap.cpp dice.cpp character.cpp parser.cpp item.cpp io.cpp item_utils.cpp
-
-RM = rm -rf
-
-CXXFLAGS = -Wall -ggdb3 -std=c++0x
-LDFLAGS = -lncurses
 ECHO = echo
+RM = rm -f
 
-rlg327: $(FILES)
-	@$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(FILES)
+TERM = "\"S2019\""
+
+CFLAGS = -Wall -Werror -ggdb3 -funroll-loops -DTERM=$(TERM)
+CXXFLAGS = -Wall -Werror -ggdb3 -funroll-loops -DTERM=$(TERM)
+
+LDFLAGS = -lncurses
+
+BIN = rlg327
+OBJS = rlg327.o io.o dungeon.o item_utils.o character.o parser.o \
+       heap.o dice.o priority_queue.o item.o character_utils.o   \
+
+
+all: $(BIN) etags
+
+$(BIN): $(OBJS)
+	@$(ECHO) Linking $@
+	@$(CXX) $^ -o $@ $(LDFLAGS)
+
+-include $(OBJS:.o=.d)
+
+%.o: %.c
+	@$(ECHO) Compiling $<
+	@$(CC) $(CFLAGS) -MMD -MF $*.d -c $<
+
+%.o: %.cpp
+	@$(ECHO) Compiling $<
+	@$(CXX) $(CXXFLAGS) -MMD -MF $*.d -c $<
+
+.PHONY: all clean clobber etags
 
 clean:
-	@$(RM) rlg327 *.o *.d *.dSYM *~
+	@$(ECHO) Removing all generated files
+	@$(RM) *.o $(BIN) *.d TAGS core vgcore.* gmon.out
 
-cleansubmit:
-	@$(RM) .vscode .git
+clobber: clean
+	@$(ECHO) Removing backup files
+	@$(RM) *~ \#* *pgm
 
-submit: clean cleansubmit
-rebuild: clean rlg327
+etags:
+	@$(ECHO) Updating TAGS
+	@etags *.[ch] *.cpp

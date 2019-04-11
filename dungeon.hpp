@@ -2,7 +2,7 @@
 #define PATHFINDER_HPP
 
 #include "character.hpp"
-#include "heap.hpp"
+#include "heap.h"
 #include "item.hpp"
 #include "priority_queue.hpp"
 #include <cstdint>
