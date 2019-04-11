@@ -116,6 +116,7 @@ void parse_monsters(std::vector<character_desc> *mv) {
     }
   }
   mv->shrink_to_fit();
+  f.close();
 }
 
 void parse_items(std::vector<item_desc> *iv) {
@@ -236,6 +237,7 @@ void parse_items(std::vector<item_desc> *iv) {
     }
   }
   iv->shrink_to_fit();
+  f.close();
 }
 
 void parse(std::vector<character_desc> *mv, std::vector<item_desc> *iv) {

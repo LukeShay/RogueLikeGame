@@ -5,8 +5,8 @@ RM = rm -f
 
 TERM = "\"S2019\""
 
-CFLAGS = -Wall -Werror -ggdb3 -funroll-loops -DTERM=$(TERM)
-CXXFLAGS = -Wall -Werror -ggdb3 -funroll-loops -DTERM=$(TERM)
+CFLAGS = -Wall -ggdb3 -funroll-loops -DTERM=$(TERM)
+CXXFLAGS = -Wall -ggdb3 -funroll-loops -DTERM=$(TERM)
 
 LDFLAGS = -lncurses
 
@@ -35,7 +35,7 @@ $(BIN): $(OBJS)
 
 clean:
 	@$(ECHO) Removing all generated files
-	@$(RM) *.o $(BIN) *.d TAGS core vgcore.* gmon.out
+	@$(RM) *.o $(BIN) *.d TAGS core vgcore.* gmon.out *.dSYM
 
 clobber: clean
 	@$(ECHO) Removing backup files

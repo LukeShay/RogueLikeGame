@@ -68,10 +68,10 @@ dungeon::~dungeon() {
   int x, y;
   for (y = 0; y < DUNGEON_Y; y++) {
     for (x = 0; x < DUNGEON_X; x++) {
-      if (character_map[y][x]) {
-        delete character_map[y][x];
-      }
-
+      /*      if (character_map[y][x]) {
+              delete character_map[y][x];
+            }
+      */
       if (item_map[y][x]) {
         delete item_map[y][x];
       }

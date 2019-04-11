@@ -36,13 +36,8 @@ int main(void) {
   srand(time(NULL));
 
   vector<character_desc> mv;
-  int fog = 0, move, lives = 10;
   vector<item_desc> iv;
-
-  parse(&mv, &iv);
-
-new_dung:
-
+  int fog = 0, move, lives = 10;
   character *pc;
   dungeon *d;
   heap_t mh;
@@ -51,8 +46,10 @@ new_dung:
   move = 0;
   pc = new character;
   d = new dungeon(pc, lives, 10, save);
-  heap_init(&mh, monster_cmp, NULL);
 
+  parse(&mv, &iv);
+
+  heap_init(&mh, monster_cmp, NULL);
   heap_insert(&mh, pc);
 
   pc->abilities = PC;
@@ -63,10 +60,11 @@ new_dung:
       file << "|" << it->type << "|" << endl;
     }*/
 
+  io_init_terminal();
+new_dung:
   generate_monsters(d, &mh, &mv);
   generate_items(d, &iv);
 
-  io_init_terminal();
   render_dungeon_first(d, pc, &mh, fog);
 
   while ((mon = (character *)heap_remove_min(&mh))) {
@@ -92,10 +90,19 @@ new_dung:
 
         } else if (move == MOVE_STAIR) {
           lives = pc->hp;
-          // heap_delete(&mh);
-          // delete pc;
-          // d->~dungeon();
           // delete d;
+
+          heap_delete(&mh);
+
+          d->~dungeon();
+
+          move = 0;
+          d = new dungeon(pc, lives, 10, save);
+          heap_init(&mh, monster_cmp, NULL);
+
+          heap_insert(&mh, pc);
+
+          pc->abilities = PC;
 
           goto new_dung;
 
