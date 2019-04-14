@@ -411,13 +411,14 @@ void place_monster(character *c, dungeon *d, int num_spaces, int num_mon) {
 }
 
 void pc_init(character *pc_char, point_t pc, int num_lives) {
-  pc_char->abilities = 128;
+  pc_char->abilities = PC;
   pc_char->speed = 10;
   pc_char->p = 10;
   pc_char->hp = num_lives;
   pc_char->name = "PC";
   pc_char->symbol = '@';
   pc_char->color = "CYAN";
+  pc_char->ad.parse_dice("0+1d4");
 
   pc_char->x = pc.xpos;
   pc_char->y = pc.ypos;
@@ -484,5 +485,44 @@ void npc_erratic(character *npc, dungeon *d, character *pc) {
 }
 
 void move_monster(dungeon *d, character *to_move, character *pc) {
-  npc_move_func[0](to_move, d, pc); // to_move->abilities & MOVEMENT_ABILITIES
+  npc_move_func[to_move->abilities & MOVEMENT_ABILITIES](to_move, d, pc);
+}
+
+int item_slot(std::string type) {
+  if (!type.compare("WEAPON")) {
+    return weapon;
+  } else if (!type.compare("OFFHAND")) {
+    return offhand;
+  } else if (!type.compare("RANGED")) {
+    return ranged;
+  } else if (!type.compare("ARMOR")) {
+    return armor;
+  } else if (!type.compare("HELMET")) {
+    return helmet;
+  } else if (!type.compare("CLOAK")) {
+    return cloak;
+  } else if (!type.compare("BOOTS")) {
+    return boots;
+  } else if (!type.compare("AMULET")) {
+    return amulet;
+  } else if (!type.compare("LIGHT")) {
+    return light;
+  } else if (!type.compare("RING")) {
+    return ring_1;
+  } else if (!type.compare("gloves")) {
+    return gloves;
+  } else {
+    return 20;
+  }
+}
+
+int empty_inventory_slot(item *arr[]) {
+  int i;
+  for (i = 0; i < 10; i++) {
+    if (!arr[i]) {
+      return i;
+    }
+  }
+
+  return i + 1;
 }

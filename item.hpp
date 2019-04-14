@@ -1,7 +1,6 @@
 #ifndef ITEM_HPP
 #define ITEM_HPP
 
-#include "character.hpp"
 #include "dice.hpp"
 #include <string>
 

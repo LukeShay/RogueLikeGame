@@ -2,6 +2,7 @@
 #define CHARACTER_HPP
 
 #include "dice.hpp"
+#include "item.hpp"
 #include <string>
 
 #define SMART 0x00000001
@@ -18,7 +19,7 @@
 #define DUNGEON_Y 21
 #define MOVEMENT_ABILITIES 15
 
-#define has_characteristic(characte, bit) (characte & bit)
+#define has_characteristic(characteristic, bit) (characteristic & bit)
 
 class character {
 public:
@@ -33,6 +34,8 @@ public:
   dice ad;
   int p;
   int direction;
+  item *equiped[12];
+  item *inventory[10];
 
   character();
   ~character();

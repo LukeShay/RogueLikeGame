@@ -12,20 +12,6 @@
 #include <unistd.h>
 #include <vector>
 
-#define MOVE_INVALID 0
-#define MOVE_VALID 1
-#define MOVE_STAIR 2
-#define QUIT 3
-#define WIN 4
-#define LOSE 5
-#define INVALID_KEY 6
-#define LIST_MONSTERS 7
-#define TUNNELING_MAP 8
-#define NON_TUNNELING_MAP 9
-#define DEFAULT_MAP 10
-#define FOG_TOGGLE 11
-#define TELEPORT 12
-
 using namespace std;
 
 int32_t monster_cmp(const void *key, const void *with) {
@@ -37,7 +23,7 @@ int main(void) {
 
   vector<character_desc> mv;
   vector<item_desc> iv;
-  int fog = 0, move, lives = 10;
+  int fog = 0, move;
   character *pc;
   dungeon *d;
   heap_t mh;
@@ -45,23 +31,17 @@ int main(void) {
 
   move = 0;
   pc = new character;
-  d = new dungeon(pc, lives, 10, save);
+  d = new dungeon(pc, 1000, 10, save);
 
   parse(&mv, &iv);
 
   heap_init(&mh, monster_cmp, NULL);
-  heap_insert(&mh, pc);
-
-  pc->abilities = PC;
-
-  /* std::vector<item_desc>::iterator it;
-
-   for (it = iv.begin(); it != iv.end(); it++) {
-      file << "|" << it->type << "|" << endl;
-    }*/
 
   io_init_terminal();
+
 new_dung:
+  heap_insert(&mh, pc);
+
   generate_monsters(d, &mh, &mv);
   generate_items(d, &iv);
 
@@ -69,6 +49,8 @@ new_dung:
 
   while ((mon = (character *)heap_remove_min(&mh))) {
     if (has_characteristic(mon->abilities, PC)) {
+      render_dungeon(d, pc, &mh, fog);
+
       if (mh.size == 0) {
         game_over(WIN);
         goto over;
@@ -89,20 +71,13 @@ new_dung:
           invalid_key();
 
         } else if (move == MOVE_STAIR) {
-          lives = pc->hp;
-          // delete d;
 
-          heap_delete(&mh);
+          heap_reset(&mh);
 
           d->~dungeon();
 
           move = 0;
-          d = new dungeon(pc, lives, 10, save);
-          heap_init(&mh, monster_cmp, NULL);
-
-          heap_insert(&mh, pc);
-
-          pc->abilities = PC;
+          d = new dungeon(pc, pc->hp, 10, save);
 
           goto new_dung;
 
@@ -115,7 +90,7 @@ new_dung:
 
           render_dungeon(d, pc, &mh, fog);
 
-        } else {
+        } else if (move == TELEPORT) {
           render_dungeon(d, pc, &mh, fog);
         }
       }

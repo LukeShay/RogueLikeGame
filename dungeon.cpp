@@ -62,19 +62,19 @@ dungeon::dungeon(character *pc_char, int num_lives, int num_mon,
   init_pc_map(pc);
   tunneling_path(this, pc.xpos, pc.ypos);
   non_tunneling_path(this, pc.xpos, pc.ypos);
+
+  update_pc_map(pc.xpos, pc.ypos);
 }
 
 dungeon::~dungeon() {
   int x, y;
   for (y = 0; y < DUNGEON_Y; y++) {
     for (x = 0; x < DUNGEON_X; x++) {
-      /*      if (character_map[y][x]) {
-              delete character_map[y][x];
-            }
-      */
       if (item_map[y][x]) {
         delete item_map[y][x];
       }
+      item_map[y][x] = NULL;
+      character_map[y][x] = NULL;
     }
   }
 }
@@ -95,9 +95,7 @@ point_t dungeon::generate_dungeon() {
   // Adds the boundaries and hardness to the dungeon arrays.
   for (x = 0; x < DUNGEON_Y; x++) {
     for (y = 0; y < DUNGEON_X; y++) {
-      if (x == 0 || x == 20) {
-        this->hardness_map[x][y] = 255;
-      } else if (y == 0 || y == 79) {
+      if (x == 0 || x == 20 || y == 0 || y == 79) {
         this->hardness_map[x][y] = 255;
       } else {
         this->hardness_map[x][y] = rand() % 254 + 1;

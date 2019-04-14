@@ -3,50 +3,38 @@
 #include <cstring>
 #include <curses.h>
 
+#include "character_utils.hpp"
 #include "io.hpp"
-
-#define MOVE_INVALID 0
-#define MOVE_VALID 1
-#define MOVE_STAIR 2
-#define QUIT 3
-#define WIN 4
-#define LOSE 5
-#define INVALID_KEY 6
-#define LIST_MONSTERS 7
-#define TUNNELING_MAP 8
-#define NON_TUNNELING_MAP 9
-#define DEFAULT_MAP 10
-#define FOG_TOGGLE 11
-#define TELEPORT 12
 
 #define DISPLAY_MAX_Y 23
 #define DISPLAY_MAX_X 79
 
 typedef enum item_type {
-  not_valid,
-  weapon,
-  offhand,
-  ranged,
-  armor,
-  helmet,
-  cloak,
-  gloves,
-  boots,
-  ring,
-  amulet,
-  light,
-  scroll_i,
-  book,
-  flask,
-  gold,
-  ammunition,
-  food,
-  wand,
-  container,
-  stack
+  sym_not_valid,
+  sym_weapon,
+  sym_offhand,
+  sym_ranged,
+  sym_armor,
+  sym_helmet,
+  sym_cloak,
+  sym_gloves,
+  sym_boots,
+  sym_ring,
+  sym_amulet,
+  sym_light,
+  sym_scroll_i,
+  sym_book,
+  sym_flask,
+  sym_gold,
+  sym_ammunition,
+  sym_food,
+  sym_wand,
+  sym_container,
+  sym_stack
 } item_type_t;
 
-const std::string symbol = "*|)}[]({\\=\"_~?!$/,-\%&";
+const char *symbol = "*|)}[]({\\=\"_~?!$/,-\%&";
+const char *equiped_item_symbol = "abcdefghijkl";
 
 const char *victory =
     "\n                                       o\n"
@@ -108,49 +96,134 @@ const char *gg =
 const char *quitter = "\"Champions don't quit.\" - Mike Tython\n\n\n           "
                       "           (Formally known as \'Mike Tyson\')";
 
+void render_pc_inventory(character *pc) {
+  int print_start = 26, i;
+  char c;
+  clear();
+
+  mvprintw(0, print_start + 2, "***************");
+  mvprintw(1, print_start + 2, "** Inventory **");
+  mvprintw(2, print_start + 2, "***************");
+
+  for (i = 0; i < sizeof(pc->inventory) / sizeof(pc->inventory[0]); i++) {
+
+    if (pc->inventory[i]) {
+      mvprintw(4 + i, print_start, "%d) %s", i, pc->inventory[i]->name.c_str());
+
+    } else {
+      mvprintw(4 + i, print_start, "%d)", i);
+    }
+  }
+
+  refresh();
+
+  while ((c = getch()) != 27) {
+  }
+}
+
+void render_pc_equipment(character *pc) {
+  int print_start = 26, i;
+  char c;
+  clear();
+
+  mvprintw(0, print_start + 2, "***************");
+  mvprintw(1, print_start + 2, "** Equipment **");
+  mvprintw(2, print_start + 2, "***************");
+
+  for (i = 0; i < sizeof(pc->equiped) / sizeof(pc->equiped[0]); i++) {
+
+    if (pc->equiped[i]) {
+      mvprintw(4 + i, print_start, "%c) %s", equiped_item_symbol[i],
+               pc->equiped[i]->name.c_str());
+
+    } else {
+      mvprintw(4 + i, print_start, "%c)", equiped_item_symbol[i]);
+    }
+  }
+
+  refresh();
+
+  while ((c = getch()) != 27) {
+  }
+}
+
+void pickup_item(dungeon *d, character *pc) {
+  int equiped_slot, inventory_slot;
+
+  if (d->item_map[pc->y][pc->x]) {
+    equiped_slot = item_slot(d->item_map[pc->y][pc->x]->type);
+    inventory_slot = empty_inventory_slot(pc->inventory);
+
+    if (!pc->equiped[equiped_slot]) {
+      pc->equiped[equiped_slot] = d->item_map[pc->y][pc->x];
+      d->item_map[pc->y][pc->x] = NULL;
+
+      attron(COLOR_PAIR(COLOR_RED));
+      mvprintw(0, 0, "Item put in slot: %c", equiped_item_symbol[equiped_slot]);
+      attroff(COLOR_PAIR(COLOR_RED));
+
+    } else if (inventory_slot < 10) {
+      pc->inventory[inventory_slot] = d->item_map[pc->y][pc->x];
+      d->item_map[pc->y][pc->x] = NULL;
+
+      attron(COLOR_PAIR(COLOR_RED));
+      mvprintw(0, 0, "Item put in slot: %d", inventory_slot);
+      attroff(COLOR_PAIR(COLOR_RED));
+    } else {
+      attron(COLOR_PAIR(COLOR_RED));
+      mvprintw(0, 0, "Inventory is full!           ");
+      attroff(COLOR_PAIR(COLOR_RED));
+    }
+  } else {
+    attron(COLOR_PAIR(COLOR_RED));
+    mvprintw(0, 0, "No item on floor!            ");
+    attroff(COLOR_PAIR(COLOR_RED));
+  }
+}
+
 int item_symbol(item *i) {
   if (!i->type.compare("WEAPON")) {
-    return weapon;
+    return sym_weapon;
   } else if (!i->type.compare("OFFHAND")) {
-    return offhand;
+    return sym_offhand;
   } else if (!i->type.compare("RANGED")) {
-    return ranged;
+    return sym_ranged;
   } else if (!i->type.compare("ARMOR")) {
-    return armor;
+    return sym_armor;
   } else if (!i->type.compare("HELMET")) {
-    return helmet;
+    return sym_helmet;
   } else if (!i->type.compare("CLOAK")) {
-    return cloak;
+    return sym_cloak;
   } else if (!i->type.compare("GLOVES")) {
-    return gloves;
+    return sym_gloves;
   } else if (!i->type.compare("BOOTS")) {
-    return boots;
+    return sym_boots;
   } else if (!i->type.compare("RING")) {
-    return ring;
+    return sym_ring;
   } else if (!i->type.compare("AMULET")) {
-    return amulet;
+    return sym_amulet;
   } else if (!i->type.compare("LIGHT")) {
-    return light;
+    return sym_light;
   } else if (!i->type.compare("SCROLL")) {
-    return scroll_i;
+    return sym_scroll_i;
   } else if (!i->type.compare("BOOK")) {
-    return book;
+    return sym_book;
   } else if (!i->type.compare("FLASK")) {
-    return flask;
+    return sym_flask;
   } else if (!i->type.compare("GOLD")) {
-    return gold;
+    return sym_gold;
   } else if (!i->type.compare("AMMUNITION")) {
-    return ammunition;
+    return sym_ammunition;
   } else if (!i->type.compare("FOOD")) {
-    return food;
+    return sym_food;
   } else if (!i->type.compare("WAND")) {
-    return wand;
+    return sym_wand;
   } else if (!i->type.compare("CONTAINER")) {
-    return container;
+    return sym_container;
   } else if (!i->type.compare("STACK")) {
-    return stack;
+    return sym_stack;
   } else {
-    return not_valid;
+    return sym_not_valid;
   }
 }
 
@@ -198,10 +271,10 @@ int list_monsters(dungeon *d, character *pc) {
     mvprintw(1, print_start + 2, "**  Monsters  **");
     mvprintw(2, print_start + 2, "****************");
 
-    attron(COLOR_PAIR(1));
+    attron(COLOR_PAIR(COLOR_RED));
     mvprintw(DISPLAY_MAX_Y - 1, 0, "Use arrow keys to scroll");
     mvprintw(DISPLAY_MAX_Y, 0, "Use ESC key to exit");
-    attroff(COLOR_PAIR(1));
+    attroff(COLOR_PAIR(COLOR_RED));
 
     for (i = 0; i < DUNGEON_Y; i++) {
       for (j = 0; j < DUNGEON_X; j++) {
@@ -322,7 +395,7 @@ void teleport_pc(dungeon *d, character *pc, heap_t *mh, int fog) {
   mvprintw(0, 0, "Teleporting                  ");
   attroff(COLOR_PAIR(COLOR_RED));
 
-  while ((c = getch()) != 't') {
+  while ((c = getch()) != 'g') {
     switch (c) {
     case 'y':
     case '7':
@@ -508,9 +581,27 @@ int move_pc(dungeon *d, character *pc, heap_t *mh, int fog) {
   case 'f':
     return FOG_TOGGLE;
 
-  case 't':
+  case 'g':
     teleport_pc(d, pc, mh, fog);
     return TELEPORT;
+
+  case 'w':
+  case 't':
+  case 'd':
+  case 'x':
+  case 'i':
+    render_pc_inventory(pc);
+    return TELEPORT;
+
+  case 'e':
+    render_pc_equipment(pc);
+    return TELEPORT;
+
+  case 'I':
+  case 'L':
+  case ',':
+    pickup_item(d, pc);
+    return ITEM_PICKUP;
 
   default:
     return INVALID_KEY;
