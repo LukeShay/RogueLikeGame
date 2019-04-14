@@ -73,7 +73,7 @@ void parse_monsters(std::vector<character_desc> *mv) {
 
         npc.color = str;
       } else if (!str.compare(DESCRIPTION)) {
-
+        npc.desc = "";
         getline(f, str);
 
         while (str.compare(".")) {
@@ -160,7 +160,7 @@ void parse_items(std::vector<item_desc> *iv) {
 
         obj.color = str;
       } else if (!str.compare(DESCRIPTION)) {
-
+        obj.desc = "";
         getline(f, str);
 
         while (str.compare(".")) {

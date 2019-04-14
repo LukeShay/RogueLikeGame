@@ -484,6 +484,116 @@ done:
   render_dungeon(d, pc, mh, fog);
 }
 
+void display_item(character *pc, int equiped, int item_slot) {
+  if (equiped && pc->equiped[item_slot]) {
+    mvprintw(0, 0, "%s", pc->equiped[item_slot]->desc.c_str());
+
+  } else if (pc->inventory[item_slot]) {
+    mvprintw(0, 0, "%s", pc->inventory[item_slot]->desc.c_str());
+  } else {
+    attron(COLOR_PAIR(COLOR_RED));
+    mvprintw(0, 0, "No item in that slot.");
+    attroff(COLOR_PAIR(COLOR_RED));
+  }
+}
+
+void inspect_item(character *pc) {
+  int c;
+
+  clear();
+
+  attron(COLOR_PAIR(COLOR_RED));
+  mvprintw(DISPLAY_MAX_Y - 1, 0, "Enter inventory or carry slot");
+  mvprintw(DISPLAY_MAX_Y, 0, "Use \'I\' key to exit");
+  attroff(COLOR_PAIR(COLOR_RED));
+
+  refresh();
+
+  while ((c = getch()) != 'I') {
+    clear();
+
+    attron(COLOR_PAIR(COLOR_RED));
+    mvprintw(DISPLAY_MAX_Y - 1, 0, "Enter inventory or carry slot");
+    mvprintw(DISPLAY_MAX_Y, 0, "Use \'I\' key to exit");
+    attroff(COLOR_PAIR(COLOR_RED));
+
+    switch (c) {
+    case 'a':
+      display_item(pc, 1, 0);
+      break;
+    case 'b':
+      display_item(pc, 1, 1);
+      break;
+    case 'c':
+      display_item(pc, 1, 2);
+      break;
+    case 'd':
+      display_item(pc, 1, 3);
+      break;
+    case 'e':
+      display_item(pc, 1, 4);
+      break;
+    case 'f':
+      display_item(pc, 1, 5);
+      break;
+    case 'g':
+      display_item(pc, 1, 6);
+      break;
+    case 'h':
+      display_item(pc, 1, 7);
+      break;
+    case 'i':
+      display_item(pc, 1, 8);
+      break;
+    case 'j':
+      display_item(pc, 1, 9);
+      break;
+    case 'k':
+      display_item(pc, 1, 10);
+      break;
+    case 'l':
+      display_item(pc, 1, 11);
+      break;
+    case '0':
+      display_item(pc, 0, 0);
+      break;
+    case '1':
+      display_item(pc, 0, 1);
+      break;
+    case '2':
+      display_item(pc, 0, 2);
+      break;
+    case '3':
+      display_item(pc, 0, 3);
+      break;
+    case '4':
+      display_item(pc, 0, 4);
+      break;
+    case '5':
+      display_item(pc, 0, 5);
+      break;
+    case '6':
+      display_item(pc, 0, 6);
+      break;
+    case '7':
+      display_item(pc, 0, 7);
+      break;
+    case '8':
+      display_item(pc, 0, 8);
+      break;
+    case '9':
+      display_item(pc, 0, 9);
+      break;
+
+    default:
+      attron(COLOR_PAIR(COLOR_RED));
+      mvprintw(0, 0, "Not an item slot.");
+      attroff(COLOR_PAIR(COLOR_RED));
+    }
+    refresh();
+  }
+}
+
 int move_pc(dungeon *d, character *pc, heap_t *mh, int fog) {
   int c = getch();
   uint8_t new_x, new_y;
@@ -598,7 +708,10 @@ int move_pc(dungeon *d, character *pc, heap_t *mh, int fog) {
     return TELEPORT;
 
   case 'I':
+    inspect_item(pc);
+    return TELEPORT;
   case 'L':
+
   case ',':
     pickup_item(d, pc);
     return ITEM_PICKUP;
