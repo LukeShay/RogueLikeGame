@@ -16,7 +16,7 @@ void generate_items(dungeon *d, std::vector<item_desc> *iv) {
 not_enough_items:
   for (it = iv->begin(); it != iv->end(); it++) {
     rand_num = rand() % 100;
-    if (rand_num < it->rarity && it->placed != 1) {
+    if (rand_num < it->rarity && it->placed != 1 && it->destroyed != 1) {
       i = new item;
 
       i->name = it->name;

@@ -1,0 +1,226 @@
+
+heap.c,833
+struct heap_node 8,99
+#define swap(18,260
+#define splice_heap_node_lists(25,671
+#define insert_heap_node_in_list(35,1325
+#define remove_heap_node_from_list(43,1817
+void print_heap_node(49,2147
+void print_heap(64,2460
+void print_heap_node_list(80,2762
+void heap_init(95,2961
+void heap_node_delete(103,3182
+void heap_delete(120,3485
+void heap_reset(130,3650
+heap_node_t *heap_insert(heap_insert138,3767
+void *heap_peek_min(heap_peek_min157,4107
+static void heap_link(159,4181
+static void heap_consolidate(172,4503
+void *heap_remove_min(heap_remove_min212,5435
+int heap_combine(246,5969
+static void heap_cut(272,6551
+static void heap_cascading_cut(285,6832
+int heap_decrease_key(298,7058
+int heap_decrease_key_no_replace(311,7300
+int32_t compare(334,7874
+char *print_int(print_int338,7971
+int main(346,8088
+
+heap.h,111
+# define HEAP_H2,15
+typedef struct heap_node heap_node_t;11,114
+typedef struct heap 13,153
+} heap_t;18,297
+
+character.cpp,136
+character::character(6,66
+character::~character(7,92
+void character::pick_location(9,120
+int character_desc::parse_abilities(28,545
+
+character_utils.cpp,579
+#define MIN_NUM_MONS 9,130
+int can_see_PC(11,155
+point_t get_smallest_neighbor_tunneling(21,363
+point_t get_smallest_neighbor_non_tunneling(38,769
+static void npc_0(56,1221
+static void npc_1(104,2229
+static void npc_2(130,2865
+static void npc_3(162,3703
+static void npc_4(185,4256
+static void npc_5(262,6434
+static void npc_6(300,7414
+static void npc_7(344,8619
+void place_monster(382,9592
+void pc_init(413,10414
+void generate_monsters(427,10735
+void npc_erratic(477,12122
+void move_monster(487,12351
+int item_slot(491,12495
+int empty_inventory_slot(519,13196
+
+dice.cpp,92
+dice::dice(5,41
+dice::dice(7,58
+void dice::parse_dice(16,283
+int dice::roll_dice(34,641
+
+dungeon.cpp,1475
+#define htobe16(4,73
+#define htole16(5,116
+#define be16toh(6,162
+#define le16toh(7,205
+#define htobe32(8,251
+#define htole32(9,294
+#define be32toh(10,340
+#define le32toh(11,383
+#define htobe64(12,429
+#define htole64(13,472
+#define be64toh(14,518
+#define le64toh(15,561
+#define ROOMS_MIN 28,788
+#define ROOMS_MAX 29,808
+#define ROOM_MIN_X 30,828
+#define ROOM_MIN_Y 31,849
+#define ROOM_MAX_X 32,870
+#define ROOM_MAX_Y 33,891
+#define FILE_SEMANTIC 34,912
+#define FILE_PATH 35,949
+#define hardnesspair(37,987
+int32_t corridor_path_cmp(39,1056
+dungeon::dungeon(43,1197
+dungeon::~dungeon(69,1913
+point_t dungeon::generate_dungeon(82,2164
+void dungeon::update_pc_map(122,3455
+int dungeon::save_dungeon(136,3816
+point_t dungeon::load_dungeon(274,7889
+point_t dungeon::load_save_dungeon(436,12578
+uint32_t dungeon::adjacent_to_room(601,17398
+uint32_t dungeon::is_open_space(612,17843
+uint16_t dungeon::generate_rooms(616,17938
+void dungeon::dijkstra_corridor_inv(686,19951
+#define hardnesspair_inv(737,21261
+void dungeon::generate_corridors(786,23780
+stair_t dungeon::place_stairs(801,24263
+point_t dungeon::place_PC(834,24953
+void dungeon::add_dungeon_rooms(861,25405
+void dungeon::add_dungeon_stairs(873,25782
+void dungeon::add_dungeon_corridor(880,25986
+void dungeon::add_PC(890,26238
+void dungeon::init_pc_map(900,26486
+void get_neighbors(910,26658
+void non_tunneling_path(924,26930
+void tunneling_path(957,27702
+void clear(995,28672
+
+io.cpp,2065
+#define DISPLAY_MAX_Y 9,128
+#define DISPLAY_MAX_X 10,153
+typedef enum item_type 12,179
+  sym_not_valid,item_type::sym_not_valid13,204
+  sym_weapon,item_type::sym_weapon14,221
+  sym_offhand,item_type::sym_offhand15,235
+  sym_ranged,item_type::sym_ranged16,250
+  sym_armor,item_type::sym_armor17,264
+  sym_helmet,item_type::sym_helmet18,277
+  sym_cloak,item_type::sym_cloak19,291
+  sym_gloves,item_type::sym_gloves20,304
+  sym_boots,item_type::sym_boots21,318
+  sym_ring,item_type::sym_ring22,331
+  sym_amulet,item_type::sym_amulet23,343
+  sym_light,item_type::sym_light24,357
+  sym_scroll_i,item_type::sym_scroll_i25,370
+  sym_book,item_type::sym_book26,386
+  sym_flask,item_type::sym_flask27,398
+  sym_gold,item_type::sym_gold28,411
+  sym_ammunition,item_type::sym_ammunition29,423
+  sym_food,item_type::sym_food30,441
+  sym_wand,item_type::sym_wand31,453
+  sym_container,item_type::sym_container32,465
+  sym_stackitem_type::sym_stack33,482
+} item_type_t;34,494
+const char *symbol symbol36,510
+const char *equiped_item_symbol equiped_item_symbol37,559
+const char *victory victory39,610
+const char *gg gg70,2239
+const char *quitter quitter96,3236
+void render_pc_inventory(99,3389
+int item_symbol(200,6209
+int valid_move(246,7579
+int valid_stair(263,7902
+int list_monsters(270,8054
+int determine_color(333,9791
+void render_dungeon_teleport(353,10313
+void teleport_pc(391,11416
+void display_item(491,13272
+void inspect_item(504,13696
+void destroy_item(601,15630
+void swap_slot(614,16029
+void display_all_items(634,16525
+void wear_item(665,17475
+void take_off_item(704,18423
+void display_monster(770,20366
+void drop_item_helper(873,22805
+void drop_item(890,23201
+int move_pc(928,24152
+void io_init_terminal(1071,26629
+void invalid_move(1089,27163
+void invalid_key(1095,27306
+void render_dungeon(1101,27448
+void render_dungeon_first(1159,29186
+void display_tunneling_map(1215,30932
+void display_non_tunneling_map(1229,31212
+void display_default_map(1248,31608
+void game_over(1262,31875
+
+item.cpp,66
+item::item(5,58
+item::~item(6,74
+void item::pick_location(8,92
+
+item_utils.cpp,54
+#define MIN_NUM_ITEMS 5,64
+void generate_items(7,90
+
+parser.cpp,771
+#define MONSTER_FILE_PATH 8,120
+#define MONSTER_FILE_SEMANTIC 9,174
+#define ITEM_FILE_PATH 10,235
+#define ITEM_FILE_SEMANTIC 11,285
+#define BEGIN_MONSTER 12,342
+#define BEGIN_ITEM 13,380
+#define NAME 14,414
+#define DESCRIPTION 15,434
+#define COLOR 16,461
+#define SPEED 17,483
+#define ABILITIES 18,505
+#define HITPOINTS 19,530
+#define DAMAGE 20,553
+#define SYMBOL 21,574
+#define RARITY 22,596
+#define END 23,618
+#define TYPE 24,636
+#define HIT_BONUS 25,656
+#define DAMAGE_BONUS 26,680
+#define DODGE_BONUS 27,707
+#define DEFENSE_BONUS 28,735
+#define WEIGHT 29,763
+#define VALUE 30,787
+#define SPEED_BONUS 31,807
+#define SPECIAL_ATTR 32,835
+#define ARTIFACT_STATUS 33,863
+void parse_monsters(35,894
+void parse_items(122,2629
+void parse(243,5009
+
+priority_queue.cpp,139
+int queue_init(4,50
+int queue_delete(10,127
+int queue_peek(25,319
+int queue_push(35,496
+int queue_pop(68,1064
+int queue_size(89,1340
+
+rlg327.cpp,45
+int32_t monster_cmp(17,278
+int main(21,395

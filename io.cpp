@@ -598,7 +598,18 @@ void inspect_item(character *pc) {
   }
 }
 
-void destroy_item(dungeon *d, character *pc) {}
+void destroy_item(dungeon *d, character *pc, std::vector<item_desc> *iv) {
+  if (d->item_map[pc->y][pc->x]) {
+    for (std::vector<item_desc>::iterator it = iv->begin(); it < iv->end();
+         it++) {
+      if (!it->name.compare(d->item_map[pc->y][pc->x]->name)) {
+        it->destroyed = 1;
+        delete d->item_map[pc->y][pc->x];
+        d->item_map[pc->y][pc->x] = NULL; // Causing seg fault
+      }
+    }
+  }
+}
 
 void swap_slot(character *pc, int slot) {
   item *temp;
@@ -914,7 +925,8 @@ void drop_item(dungeon *d, character *pc) {
   } while ((c = getch()) != 27);
 }
 
-int move_pc(dungeon *d, character *pc, heap_t *mh, int fog) {
+int move_pc(dungeon *d, character *pc, heap_t *mh, std::vector<item_desc> *iv,
+            int fog) {
   int c = getch();
   uint8_t new_x, new_y;
 
@@ -1028,7 +1040,7 @@ int move_pc(dungeon *d, character *pc, heap_t *mh, int fog) {
     return TELEPORT;
 
   case 'x':
-    destroy_item(d, pc);
+    destroy_item(d, pc, iv);
     return TELEPORT;
 
   case 'i':

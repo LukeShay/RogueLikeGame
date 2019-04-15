@@ -61,7 +61,7 @@ new_dung:
       }
 
       while (move == MOVE_INVALID || move >= INVALID_KEY) {
-        move = move_pc(d, mon, &mh, fog);
+        move = move_pc(d, mon, &mh, &iv, fog);
         d->update_pc_map(mon->x, mon->y);
 
         if (move == MOVE_INVALID) {

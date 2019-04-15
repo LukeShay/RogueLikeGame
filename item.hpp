@@ -47,6 +47,7 @@ public:
   int rarity;
   std::string artifact_status;
   int placed; // 0 = no, 1 = yes Only used for artifacts
+  int destroyed;
 };
 
 #endif
