@@ -509,7 +509,7 @@ int item_slot(std::string type) {
     return light;
   } else if (!type.compare("RING")) {
     return ring_1;
-  } else if (!type.compare("gloves")) {
+  } else if (!type.compare("GLOVES")) {
     return gloves;
   } else {
     return 20;

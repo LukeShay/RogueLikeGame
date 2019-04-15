@@ -115,6 +115,10 @@ void render_pc_inventory(character *pc) {
     }
   }
 
+  attron(COLOR_PAIR(COLOR_RED));
+  mvprintw(DISPLAY_MAX_Y, 0, "Use ESC key to exit");
+  attroff(COLOR_PAIR(COLOR_RED));
+
   refresh();
 
   while ((c = getch()) != 27) {
@@ -140,6 +144,10 @@ void render_pc_equipment(character *pc) {
       mvprintw(4 + i, print_start, "%c)", equiped_item_symbol[i]);
     }
   }
+
+  attron(COLOR_PAIR(COLOR_RED));
+  mvprintw(DISPLAY_MAX_Y, 0, "Use ESC key to exit");
+  attroff(COLOR_PAIR(COLOR_RED));
 
   refresh();
 
@@ -314,6 +322,26 @@ int list_monsters(dungeon *d, character *pc) {
   return 0;
 }
 
+int determine_color(std::string color) {
+  if (!color.compare("RED")) {
+    return COLOR_RED;
+  } else if (!color.compare("BLUE")) {
+    return COLOR_BLUE;
+  } else if (!color.compare("MAGENTA")) {
+    return COLOR_MAGENTA;
+  } else if (!color.compare("YELLOW")) {
+    return COLOR_YELLOW;
+  } else if (!color.compare("BLACK")) {
+    return COLOR_BLACK;
+  } else if (!color.compare("CYAN")) {
+    return COLOR_CYAN;
+  } else if (!color.compare("GREEN")) {
+    return COLOR_GREEN;
+  } else {
+    return COLOR_WHITE;
+  }
+}
+
 void render_dungeon_teleport(dungeon *d, character *pc, heap_t *mh, int fog) {
   int x, y, i;
 
@@ -328,45 +356,13 @@ void render_dungeon_teleport(dungeon *d, character *pc, heap_t *mh, int fog) {
         attroff(COLOR_PAIR(COLOR_CYAN));
       } else {
         if (d->character_map[y][x] && d->character_map[y][x] != pc) {
-          if (!d->character_map[y][x]->color.compare("RED")) {
-            i = COLOR_RED;
-          } else if (!d->character_map[y][x]->color.compare("BLUE")) {
-            i = COLOR_BLUE;
-          } else if (!d->character_map[y][x]->color.compare("MAGENTA")) {
-            i = COLOR_MAGENTA;
-          } else if (!d->character_map[y][x]->color.compare("YELLOW")) {
-            i = COLOR_YELLOW;
-          } else if (!d->character_map[y][x]->color.compare("BLACK")) {
-            i = COLOR_BLACK;
-          } else if (!d->character_map[y][x]->color.compare("CYAN")) {
-            i = COLOR_CYAN;
-          } else if (!d->character_map[y][x]->color.compare("GREEN")) {
-            i = COLOR_GREEN;
-          } else {
-            i = COLOR_WHITE;
-          }
+          i = determine_color(d->character_map[y][x]->color);
 
           attron(COLOR_PAIR(i));
           mvaddch(y + 1, x, d->character_map[y][x]->symbol);
           attroff(COLOR_PAIR(i));
         } else if (d->item_map[y][x]) {
-          if (!d->item_map[y][x]->color.compare("RED")) {
-            i = COLOR_RED;
-          } else if (!d->item_map[y][x]->color.compare("BLUE")) {
-            i = COLOR_BLUE;
-          } else if (!d->item_map[y][x]->color.compare("MAGENTA")) {
-            i = COLOR_MAGENTA;
-          } else if (!d->item_map[y][x]->color.compare("YELLOW")) {
-            i = COLOR_YELLOW;
-          } else if (!d->item_map[y][x]->color.compare("BLACK")) {
-            i = COLOR_BLACK;
-          } else if (!d->item_map[y][x]->color.compare("CYAN")) {
-            i = COLOR_CYAN;
-          } else if (!d->item_map[y][x]->color.compare("GREEN")) {
-            i = COLOR_GREEN;
-          } else {
-            i = COLOR_WHITE;
-          }
+          i = determine_color(d->item_map[y][x]->color);
 
           attron(COLOR_PAIR(i));
           mvaddch(y + 1, x, symbol[item_symbol(d->item_map[y][x])]);
@@ -488,7 +484,7 @@ void display_item(character *pc, int equiped, int item_slot) {
   if (equiped && pc->equiped[item_slot]) {
     mvprintw(0, 0, "%s", pc->equiped[item_slot]->desc.c_str());
 
-  } else if (pc->inventory[item_slot]) {
+  } else if (!equiped && pc->inventory[item_slot]) {
     mvprintw(0, 0, "%s", pc->inventory[item_slot]->desc.c_str());
   } else {
     attron(COLOR_PAIR(COLOR_RED));
@@ -504,17 +500,17 @@ void inspect_item(character *pc) {
 
   attron(COLOR_PAIR(COLOR_RED));
   mvprintw(DISPLAY_MAX_Y - 1, 0, "Enter inventory or carry slot");
-  mvprintw(DISPLAY_MAX_Y, 0, "Use \'I\' key to exit");
+  mvprintw(DISPLAY_MAX_Y, 0, "Use ESC key to exit");
   attroff(COLOR_PAIR(COLOR_RED));
 
   refresh();
 
-  while ((c = getch()) != 'I') {
+  while ((c = getch()) != 27) {
     clear();
 
     attron(COLOR_PAIR(COLOR_RED));
     mvprintw(DISPLAY_MAX_Y - 1, 0, "Enter inventory or carry slot");
-    mvprintw(DISPLAY_MAX_Y, 0, "Use \'I\' key to exit");
+    mvprintw(DISPLAY_MAX_Y, 0, "Use ESC key to exit");
     attroff(COLOR_PAIR(COLOR_RED));
 
     switch (c) {
@@ -590,6 +586,98 @@ void inspect_item(character *pc) {
       mvprintw(0, 0, "Not an item slot.");
       attroff(COLOR_PAIR(COLOR_RED));
     }
+    refresh();
+  }
+}
+
+void destroy_item(dungeon *d, character *pc) {}
+
+void swap_slot(character *pc, int slot) {
+  item *temp;
+  int equiped_slot;
+
+  if (pc->inventory[slot]) {
+    equiped_slot = item_slot(pc->inventory[slot]->type);
+
+    if (equiped_slot < 15) {
+      if (pc->equiped[equiped_slot]) {
+        temp = pc->equiped[equiped_slot];
+        pc->equiped[equiped_slot] = pc->inventory[slot];
+        pc->inventory[slot] = temp;
+      } else {
+        pc->equiped[equiped_slot] = pc->inventory[slot];
+        pc->inventory[slot] = NULL;
+      }
+    }
+  }
+}
+
+void display_all_items(character *pc) {
+  int print_start = 20, i;
+
+  mvprintw(1, print_start + 2, "***************");
+  mvprintw(2, print_start + 2, "** Inventory **");
+  mvprintw(3, print_start + 2, "***************");
+
+  for (i = 0; i < sizeof(pc->inventory) / sizeof(pc->inventory[0]); i++) {
+    if (pc->inventory[i]) {
+      mvprintw(4 + i, print_start, "%d) %s", i, pc->inventory[i]->name.c_str());
+
+    } else {
+      mvprintw(4 + i, print_start, "%d)", i);
+    }
+  }
+
+  mvprintw(1, print_start + 24, "***************");
+  mvprintw(2, print_start + 24, "** Equipment **");
+  mvprintw(3, print_start + 24, "***************");
+
+  for (i = 0; i < sizeof(pc->equiped) / sizeof(pc->equiped[0]); i++) {
+    if (pc->equiped[i]) {
+      mvprintw(4 + i, print_start + 22, "%c) %s", equiped_item_symbol[i],
+               pc->equiped[i]->name.c_str());
+
+    } else {
+      mvprintw(4 + i, print_start + 22, "%c)", equiped_item_symbol[i]);
+    }
+  }
+}
+
+void wear_item(character *pc) {
+  int c, equiped_slot;
+
+  clear();
+  display_all_items(pc);
+
+  attron(COLOR_PAIR(COLOR_RED));
+  mvprintw(DISPLAY_MAX_Y - 1, 0, "Enter inventory slot");
+  mvprintw(DISPLAY_MAX_Y, 0, "Use ESC key to exit");
+  attroff(COLOR_PAIR(COLOR_RED));
+  refresh();
+
+  while ((c = getch()) != 27) {
+    clear();
+
+    attron(COLOR_PAIR(COLOR_RED));
+    mvprintw(DISPLAY_MAX_Y - 1, 0, "Enter inventory slot");
+    mvprintw(DISPLAY_MAX_Y, 0, "Use ESC key to exit");
+    attroff(COLOR_PAIR(COLOR_RED));
+
+    if (c >= '0' && c <= '9') {
+      equiped_slot = c - '0';
+      swap_slot(pc, equiped_slot);
+
+      attron(COLOR_PAIR(COLOR_RED));
+      mvprintw(0, 0, "Now wearing item from %d", equiped_slot);
+      attroff(COLOR_PAIR(COLOR_RED));
+
+    } else {
+      attron(COLOR_PAIR(COLOR_RED));
+      mvprintw(0, 0, "Not an inventory slot.");
+      attroff(COLOR_PAIR(COLOR_RED));
+    }
+
+    display_all_items(pc);
     refresh();
   }
 }
@@ -696,9 +784,21 @@ int move_pc(dungeon *d, character *pc, heap_t *mh, int fog) {
     return TELEPORT;
 
   case 'w':
+    wear_item(pc);
+    return TELEPORT;
+
   case 't':
+    // take_off_item(d, pc);
+    return TELEPORT;
+
   case 'd':
+    // drop_item(d, pc);
+    return TELEPORT;
+
   case 'x':
+    destroy_item(d, pc);
+    return TELEPORT;
+
   case 'i':
     render_pc_inventory(pc);
     return TELEPORT;
@@ -710,7 +810,10 @@ int move_pc(dungeon *d, character *pc, heap_t *mh, int fog) {
   case 'I':
     inspect_item(pc);
     return TELEPORT;
+
   case 'L':
+    // look_at_monster(d, pc);
+    return TELEPORT;
 
   case ',':
     pickup_item(d, pc);
@@ -763,23 +866,7 @@ void render_dungeon(dungeon *d, character *pc, heap_t *mh, int fog) {
             y <= pc->y + PC_RADIUS && x >= pc->x - PC_RADIUS &&
             x <= pc->x + PC_RADIUS) {
 
-          if (!d->character_map[y][x]->color.compare("RED")) {
-            i = COLOR_RED;
-          } else if (!d->character_map[y][x]->color.compare("BLUE")) {
-            i = COLOR_BLUE;
-          } else if (!d->character_map[y][x]->color.compare("MAGENTA")) {
-            i = COLOR_MAGENTA;
-          } else if (!d->character_map[y][x]->color.compare("YELLOW")) {
-            i = COLOR_YELLOW;
-          } else if (!d->character_map[y][x]->color.compare("BLACK")) {
-            i = COLOR_BLACK;
-          } else if (!d->character_map[y][x]->color.compare("CYAN")) {
-            i = COLOR_CYAN;
-          } else if (!d->character_map[y][x]->color.compare("GREEN")) {
-            i = COLOR_GREEN;
-          } else {
-            i = COLOR_WHITE;
-          }
+          i = determine_color(d->character_map[y][x]->color);
 
           attron(COLOR_PAIR(i));
           mvaddch(y + 1, x, d->character_map[y][x]->symbol);
@@ -788,23 +875,8 @@ void render_dungeon(dungeon *d, character *pc, heap_t *mh, int fog) {
         } else if (d->item_map[y][x] && y >= pc->y - PC_RADIUS &&
                    y <= pc->y + PC_RADIUS && x >= pc->x - PC_RADIUS &&
                    x <= pc->x + PC_RADIUS) {
-          if (!d->item_map[y][x]->color.compare("RED")) {
-            i = COLOR_RED;
-          } else if (!d->item_map[y][x]->color.compare("BLUE")) {
-            i = COLOR_BLUE;
-          } else if (!d->item_map[y][x]->color.compare("MAGENTA")) {
-            i = COLOR_MAGENTA;
-          } else if (!d->item_map[y][x]->color.compare("YELLOW")) {
-            i = COLOR_YELLOW;
-          } else if (!d->item_map[y][x]->color.compare("BLACK")) {
-            i = COLOR_BLACK;
-          } else if (!d->item_map[y][x]->color.compare("CYAN")) {
-            i = COLOR_CYAN;
-          } else if (!d->item_map[y][x]->color.compare("GREEN")) {
-            i = COLOR_GREEN;
-          } else {
-            i = COLOR_WHITE;
-          }
+
+          i = determine_color(d->item_map[y][x]->color);
 
           attron(COLOR_PAIR(i));
           mvaddch(y + 1, x, symbol[item_symbol(d->item_map[y][x])]);
@@ -815,45 +887,13 @@ void render_dungeon(dungeon *d, character *pc, heap_t *mh, int fog) {
         }
       } else {
         if (d->character_map[y][x]) {
-          if (!d->character_map[y][x]->color.compare("RED")) {
-            i = COLOR_RED;
-          } else if (!d->character_map[y][x]->color.compare("BLUE")) {
-            i = COLOR_BLUE;
-          } else if (!d->character_map[y][x]->color.compare("MAGENTA")) {
-            i = COLOR_MAGENTA;
-          } else if (!d->character_map[y][x]->color.compare("YELLOW")) {
-            i = COLOR_YELLOW;
-          } else if (!d->character_map[y][x]->color.compare("BLACK")) {
-            i = COLOR_BLACK;
-          } else if (!d->character_map[y][x]->color.compare("CYAN")) {
-            i = COLOR_CYAN;
-          } else if (!d->character_map[y][x]->color.compare("GREEN")) {
-            i = COLOR_GREEN;
-          } else {
-            i = COLOR_WHITE;
-          }
+          i = determine_color(d->character_map[y][x]->color);
 
           attron(COLOR_PAIR(i));
           mvaddch(y + 1, x, d->character_map[y][x]->symbol);
           attroff(COLOR_PAIR(i));
         } else if (d->item_map[y][x]) {
-          if (!d->item_map[y][x]->color.compare("RED")) {
-            i = COLOR_RED;
-          } else if (!d->item_map[y][x]->color.compare("BLUE")) {
-            i = COLOR_BLUE;
-          } else if (!d->item_map[y][x]->color.compare("MAGENTA")) {
-            i = COLOR_MAGENTA;
-          } else if (!d->item_map[y][x]->color.compare("YELLOW")) {
-            i = COLOR_YELLOW;
-          } else if (!d->item_map[y][x]->color.compare("BLACK")) {
-            i = COLOR_BLACK;
-          } else if (!d->item_map[y][x]->color.compare("CYAN")) {
-            i = COLOR_CYAN;
-          } else if (!d->item_map[y][x]->color.compare("GREEN")) {
-            i = COLOR_GREEN;
-          } else {
-            i = COLOR_WHITE;
-          }
+          i = determine_color(d->item_map[y][x]->color);
 
           attron(COLOR_PAIR(i));
           mvaddch(y + 1, x, symbol[item_symbol(d->item_map[y][x])]);
@@ -883,23 +923,7 @@ void render_dungeon_first(dungeon *d, character *pc, heap_t *mh, int fog) {
         if (d->character_map[y][x] && y >= pc->y - PC_RADIUS &&
             y <= pc->y + PC_RADIUS && x >= pc->x - PC_RADIUS &&
             x <= pc->x + PC_RADIUS) {
-          if (!d->character_map[y][x]->color.compare("RED")) {
-            i = COLOR_RED;
-          } else if (!d->character_map[y][x]->color.compare("BLUE")) {
-            i = COLOR_BLUE;
-          } else if (!d->character_map[y][x]->color.compare("MAGENTA")) {
-            i = COLOR_MAGENTA;
-          } else if (!d->character_map[y][x]->color.compare("YELLOW")) {
-            i = COLOR_YELLOW;
-          } else if (!d->character_map[y][x]->color.compare("BLACK")) {
-            i = COLOR_BLACK;
-          } else if (!d->character_map[y][x]->color.compare("CYAN")) {
-            i = COLOR_CYAN;
-          } else if (!d->character_map[y][x]->color.compare("GREEN")) {
-            i = COLOR_GREEN;
-          } else {
-            i = COLOR_WHITE;
-          }
+          i = determine_color(d->character_map[y][x]->color);
 
           attron(COLOR_PAIR(i));
           mvaddch(y + 1, x, d->character_map[y][x]->symbol);
@@ -908,23 +932,7 @@ void render_dungeon_first(dungeon *d, character *pc, heap_t *mh, int fog) {
         } else if (d->item_map[y][x] && y >= pc->y - PC_RADIUS &&
                    y <= pc->y + PC_RADIUS && x >= pc->x - PC_RADIUS &&
                    x <= pc->x + PC_RADIUS) {
-          if (!d->item_map[y][x]->color.compare("RED")) {
-            i = COLOR_RED;
-          } else if (!d->item_map[y][x]->color.compare("BLUE")) {
-            i = COLOR_BLUE;
-          } else if (!d->item_map[y][x]->color.compare("MAGENTA")) {
-            i = COLOR_MAGENTA;
-          } else if (!d->item_map[y][x]->color.compare("YELLOW")) {
-            i = COLOR_YELLOW;
-          } else if (!d->item_map[y][x]->color.compare("BLACK")) {
-            i = COLOR_BLACK;
-          } else if (!d->item_map[y][x]->color.compare("CYAN")) {
-            i = COLOR_CYAN;
-          } else if (!d->item_map[y][x]->color.compare("GREEN")) {
-            i = COLOR_GREEN;
-          } else {
-            i = COLOR_WHITE;
-          }
+          i = determine_color(d->item_map[y][x]->color);
 
           attron(COLOR_PAIR(i));
           mvaddch(y + 1, x, symbol[item_symbol(d->item_map[y][x])]);
@@ -935,45 +943,13 @@ void render_dungeon_first(dungeon *d, character *pc, heap_t *mh, int fog) {
         }
       } else {
         if (d->character_map[y][x]) {
-          if (!d->character_map[y][x]->color.compare("RED")) {
-            i = COLOR_RED;
-          } else if (!d->character_map[y][x]->color.compare("BLUE")) {
-            i = COLOR_BLUE;
-          } else if (!d->character_map[y][x]->color.compare("MAGENTA")) {
-            i = COLOR_MAGENTA;
-          } else if (!d->character_map[y][x]->color.compare("YELLOW")) {
-            i = COLOR_YELLOW;
-          } else if (!d->character_map[y][x]->color.compare("BLACK")) {
-            i = COLOR_BLACK;
-          } else if (!d->character_map[y][x]->color.compare("CYAN")) {
-            i = COLOR_CYAN;
-          } else if (!d->character_map[y][x]->color.compare("GREEN")) {
-            i = COLOR_GREEN;
-          } else {
-            i = COLOR_WHITE;
-          }
+          i = determine_color(d->character_map[y][x]->color);
 
           attron(COLOR_PAIR(i));
           mvaddch(y + 1, x, d->character_map[y][x]->symbol);
           attroff(COLOR_PAIR(i));
         } else if (d->item_map[y][x]) {
-          if (!d->item_map[y][x]->color.compare("RED")) {
-            i = COLOR_RED;
-          } else if (!d->item_map[y][x]->color.compare("BLUE")) {
-            i = COLOR_BLUE;
-          } else if (!d->item_map[y][x]->color.compare("MAGENTA")) {
-            i = COLOR_MAGENTA;
-          } else if (!d->item_map[y][x]->color.compare("YELLOW")) {
-            i = COLOR_YELLOW;
-          } else if (!d->item_map[y][x]->color.compare("BLACK")) {
-            i = COLOR_BLACK;
-          } else if (!d->item_map[y][x]->color.compare("CYAN")) {
-            i = COLOR_CYAN;
-          } else if (!d->item_map[y][x]->color.compare("GREEN")) {
-            i = COLOR_GREEN;
-          } else {
-            i = COLOR_WHITE;
-          }
+          i = determine_color(d->item_map[y][x]->color);
 
           attron(COLOR_PAIR(i));
           mvaddch(y + 1, x, symbol[item_symbol(d->item_map[y][x])]);
