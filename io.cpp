@@ -859,6 +859,61 @@ void look_at_monster(dungeon *d, character *pc, heap_t *mh) {
   }
 }
 
+void drop_item_helper(dungeon *d, character *pc, int slot) {
+
+  if (pc->inventory[slot]) {
+    if (!d->item_map[pc->y][pc->x]) {
+      d->item_map[pc->y][pc->x] = pc->inventory[slot];
+    } else {
+      delete pc->inventory[slot];
+    }
+
+    pc->inventory[slot] = NULL;
+
+    mvprintw(0, 0, "Item in slot %d dropped", slot);
+  } else {
+    mvprintw(0, 0, "No item in slot %d      ", slot);
+  }
+}
+
+void drop_item(dungeon *d, character *pc) {
+  int print_start = 26, i;
+  int c = INT_MAX;
+
+  do {
+    clear();
+
+    attron(COLOR_PAIR(COLOR_RED));
+    if (c >= '0' && c <= '9') {
+      drop_item_helper(d, pc, c - '0');
+    }
+    attroff(COLOR_PAIR(COLOR_RED));
+
+    mvprintw(0, print_start + 2, "***************");
+    mvprintw(1, print_start + 2, "** Inventory **");
+    mvprintw(2, print_start + 2, "***************");
+
+    for (i = 0; i < sizeof(pc->inventory) / sizeof(pc->inventory[0]); i++) {
+
+      if (pc->inventory[i]) {
+        mvprintw(4 + i, print_start, "%d) %s", i,
+                 pc->inventory[i]->name.c_str());
+
+      } else {
+        mvprintw(4 + i, print_start, "%d)", i);
+      }
+    }
+
+    attron(COLOR_PAIR(COLOR_RED));
+    mvprintw(DISPLAY_MAX_Y - 1, 0, "Enter an inventory slot");
+    mvprintw(DISPLAY_MAX_Y, 0, "Use ESC key to exit");
+    attroff(COLOR_PAIR(COLOR_RED));
+
+    refresh();
+
+  } while ((c = getch()) != 27);
+}
+
 int move_pc(dungeon *d, character *pc, heap_t *mh, int fog) {
   int c = getch();
   uint8_t new_x, new_y;
@@ -969,7 +1024,7 @@ int move_pc(dungeon *d, character *pc, heap_t *mh, int fog) {
     return TELEPORT;
 
   case 'd':
-    // drop_item(d, pc);
+    drop_item(d, pc);
     return TELEPORT;
 
   case 'x':

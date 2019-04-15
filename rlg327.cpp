@@ -35,10 +35,6 @@ int main(void) {
 
   parse(&mv, &iv);
 
-  for (vector<character_desc>::iterator it = mv.begin(); it < mv.end(); it++) {
-    cout << it->desc << endl << endl;
-  }
-
   heap_init(&mh, monster_cmp, NULL);
 
   io_init_terminal();
