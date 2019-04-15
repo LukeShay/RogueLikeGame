@@ -682,6 +682,72 @@ void wear_item(character *pc) {
   }
 }
 
+void take_off_item(dungeon *d, character *pc) {
+  int print_start = 32, i, c, inventory_slot;
+  clear();
+
+  mvprintw(1, print_start, "***************");
+  mvprintw(2, print_start, "** Equipment **");
+  mvprintw(3, print_start, "***************");
+
+  for (i = 0; i < sizeof(pc->equiped) / sizeof(pc->equiped[0]); i++) {
+    if (pc->equiped[i]) {
+      mvprintw(4 + i, print_start - 4, "%c) %s", equiped_item_symbol[i],
+               pc->equiped[i]->name.c_str());
+
+    } else {
+      mvprintw(4 + i, print_start - 4, "%c)", equiped_item_symbol[i]);
+    }
+  }
+
+  attron(COLOR_PAIR(COLOR_RED));
+  mvprintw(DISPLAY_MAX_Y - 1, 0, "Enter equipment slot");
+  mvprintw(DISPLAY_MAX_Y, 0, "Use ESC key to exit");
+  attroff(COLOR_PAIR(COLOR_RED));
+  refresh();
+
+  while ((c = getch()) != 27) {
+    i = c - 'a';
+
+    if (i < 12 && i >= 0) {
+      inventory_slot = empty_inventory_slot(pc->inventory);
+
+      if (inventory_slot < 10) {
+        pc->inventory[inventory_slot] = pc->equiped[i];
+      } else {
+        if (!d->item_map[pc->y][pc->x]) {
+          d->item_map[pc->y][pc->x] = pc->equiped[i];
+        } else {
+          delete pc->equiped[i];
+        }
+      }
+      pc->equiped[i] = NULL;
+    }
+
+    clear();
+    mvprintw(1, print_start, "***************");
+    mvprintw(2, print_start, "** Equipment **");
+    mvprintw(3, print_start, "***************");
+
+    for (i = 0; i < sizeof(pc->equiped) / sizeof(pc->equiped[0]); i++) {
+      if (pc->equiped[i]) {
+        mvprintw(4 + i, print_start - 4, "%c) %s", equiped_item_symbol[i],
+                 pc->equiped[i]->name.c_str());
+
+      } else {
+        mvprintw(4 + i, print_start - 4, "%c)", equiped_item_symbol[i]);
+      }
+    }
+
+    attron(COLOR_PAIR(COLOR_RED));
+    mvprintw(0, 0, "Took off item in slot %c", c);
+    mvprintw(DISPLAY_MAX_Y - 1, 0, "Enter equipment slot");
+    mvprintw(DISPLAY_MAX_Y, 0, "Use ESC key to exit");
+    attroff(COLOR_PAIR(COLOR_RED));
+    refresh();
+  }
+}
+
 int move_pc(dungeon *d, character *pc, heap_t *mh, int fog) {
   int c = getch();
   uint8_t new_x, new_y;
@@ -788,7 +854,7 @@ int move_pc(dungeon *d, character *pc, heap_t *mh, int fog) {
     return TELEPORT;
 
   case 't':
-    // take_off_item(d, pc);
+    take_off_item(d, pc);
     return TELEPORT;
 
   case 'd':
