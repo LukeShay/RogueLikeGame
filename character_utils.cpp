@@ -53,7 +53,33 @@ point_t get_smallest_neighbor_non_tunneling(point_t p, dungeon *d) {
   return temp;
 }
 
+static void move_to_new_location(character *npc, dungeon *d, int temp_x,
+                                 int temp_y) {
+  if (d->character_map[temp_y][temp_x] &&
+      has_characteristic(d->character_map[temp_y][temp_x]->abilities, PC)) {
+
+    d->character_map[temp_y][temp_x]->hp -= npc->ad.roll_dice();
+    d->character_map[npc->y][npc->x] = npc;
+
+  } else if (d->character_map[temp_y][temp_x]) {
+    d->character_map[temp_y][temp_x]->x = npc->x;
+    d->character_map[temp_y][temp_x]->y = npc->y;
+    d->character_map[npc->y][npc->x] = d->character_map[temp_y][temp_x];
+
+    npc->x = temp_x;
+    npc->y = temp_y;
+    d->character_map[npc->y][npc->x] = npc;
+
+  } else {
+    npc->x = temp_x;
+    npc->y = temp_y;
+    d->character_map[npc->y][npc->x] = npc;
+  }
+}
+
 static void npc_0(character *npc, dungeon *d, character *pc) {
+  int temp_x = npc->x, temp_y = npc->y;
+
   d->character_map[npc->y][npc->x] = NULL;
 
   switch (npc->direction) {
@@ -61,44 +87,35 @@ static void npc_0(character *npc, dungeon *d, character *pc) {
     if (d->hardness_map[npc->y - 1][npc->x] != 0)
       npc->direction = rand() % 4;
     else
-      npc->y -= 1;
+      temp_y -= 1;
     break;
 
   case 1:
     if (d->hardness_map[npc->y][npc->x + 1] != 0)
       npc->direction = rand() % 4;
     else
-      npc->x += 1;
+      temp_x += 1;
     break;
 
   case 2:
     if (d->hardness_map[npc->y + 1][npc->x] != 0)
       npc->direction = rand() % 4;
     else
-      npc->y += 1;
+      temp_y += 1;
     break;
 
   case 3:
     if (d->hardness_map[npc->y][npc->x - 1] != 0)
       npc->direction = rand() % 4;
     else
-      npc->x -= 1;
+      temp_x -= 1;
     break;
 
   default:
     break;
   }
 
-  if (d->character_map[npc->y][npc->x]) {
-    d->character_map[npc->y][npc->x]->hp--;
-
-    if (has_characteristic(d->character_map[npc->y][npc->x]->abilities, PC)) {
-      npc->hp = 0;
-    } else {
-      d->character_map[npc->y][npc->x] = npc;
-    }
-  } else
-    d->character_map[npc->y][npc->x] = npc;
+  move_to_new_location(npc, d, temp_x, temp_y);
 }
 
 static void npc_1(character *npc, dungeon *d, character *pc) {
@@ -106,25 +123,13 @@ static void npc_1(character *npc, dungeon *d, character *pc) {
   p.xpos = npc->x;
   p.ypos = npc->y;
 
+  d->character_map[npc->y][npc->x] = NULL;
+
   if ((can_see_PC(npc, pc))) {
     p = get_smallest_neighbor_non_tunneling(p, d);
   }
 
-  d->character_map[npc->y][npc->x] = NULL;
-
-  npc->x = p.xpos;
-  npc->y = p.ypos;
-
-  if (d->character_map[npc->y][npc->x]) {
-    d->character_map[npc->y][npc->x]->hp--;
-    if (has_characteristic(d->character_map[npc->y][npc->x]->abilities, PC)) {
-      npc->hp = 0;
-    } else {
-      d->character_map[npc->y][npc->x]->hp--;
-      d->character_map[npc->y][npc->x] = npc;
-    }
-  } else
-    d->character_map[npc->y][npc->x] = npc;
+  move_to_new_location(npc, d, p.xpos, p.ypos);
 }
 
 static void npc_2(character *npc, dungeon *d, character *pc) {
@@ -142,20 +147,7 @@ static void npc_2(character *npc, dungeon *d, character *pc) {
 
   if (d->hardness_map[temp_y][temp_x] == 0) {
     d->character_map[npc->y][npc->x] = NULL;
-
-    npc->x = temp_x;
-    npc->y = temp_y;
-
-    if (d->character_map[npc->y][npc->x]) {
-      d->character_map[npc->y][npc->x]->hp--;
-
-      if (has_characteristic(d->character_map[npc->y][npc->x]->abilities, PC)) {
-        npc->hp = 0;
-      } else {
-        d->character_map[npc->y][npc->x] = npc;
-      }
-    } else
-      d->character_map[npc->y][npc->x] = npc;
+    move_to_new_location(npc, d, temp_x, temp_y);
   }
 }
 
@@ -167,22 +159,11 @@ static void npc_3(character *npc, dungeon *d, character *pc) {
   p = get_smallest_neighbor_non_tunneling(p, d);
 
   d->character_map[npc->y][npc->x] = NULL;
-
-  npc->x = p.xpos;
-  npc->y = p.ypos;
-
-  if (d->character_map[npc->y][npc->x]) {
-    d->character_map[npc->y][npc->x]->hp--;
-    if (has_characteristic(d->character_map[npc->y][npc->x]->abilities, PC)) {
-      npc->hp = 0;
-    } else {
-      d->character_map[npc->y][npc->x] = npc;
-    }
-  } else
-    d->character_map[npc->y][npc->x] = npc;
+  move_to_new_location(npc, d, p.xpos, p.ypos);
 }
 
 static void npc_4(character *npc, dungeon *d, character *pc) {
+  int temp_x = npc->x, temp_y = npc->y;
   d->character_map[npc->y][npc->x] = NULL;
 
   switch (npc->direction) {
@@ -190,11 +171,11 @@ static void npc_4(character *npc, dungeon *d, character *pc) {
     if (d->hardness_map[npc->y - 1][npc->x] == 255)
       npc->direction = rand() % 4;
     else if (d->hardness_map[npc->y - 1][npc->x] == 0) {
-      npc->y -= 1;
+      temp_y -= 1;
     } else if (d->hardness_map[npc->y - 1][npc->x] < 86) {
       d->hardness_map[npc->y - 1][npc->x] = 0;
       d->terrain_map[npc->y - 1][npc->x] = '#';
-      npc->y -= 1;
+      temp_y -= 1;
     } else {
       d->hardness_map[npc->y - 1][npc->x] -= 85;
     }
@@ -204,11 +185,11 @@ static void npc_4(character *npc, dungeon *d, character *pc) {
     if (d->hardness_map[npc->y][npc->x + 1] == 255)
       npc->direction = rand() % 4;
     else if (d->hardness_map[npc->y][npc->x + 1] == 0) {
-      npc->x += 1;
+      temp_x += 1;
     } else if (d->hardness_map[npc->y][npc->x + 1] < 86) {
       d->hardness_map[npc->y][npc->x + 1] = 0;
       d->terrain_map[npc->y][npc->x + 1] = '#';
-      npc->x += 1;
+      temp_x += 1;
     } else {
       d->hardness_map[npc->y][npc->x + 1] -= 85;
     }
@@ -218,11 +199,11 @@ static void npc_4(character *npc, dungeon *d, character *pc) {
     if (d->hardness_map[npc->y + 1][npc->x] == 255)
       npc->direction = rand() % 4;
     else if (d->hardness_map[npc->y + 1][npc->x] == 0) {
-      npc->y += 1;
+      temp_y += 1;
     } else if (d->hardness_map[npc->y + 1][npc->x] < 86) {
       d->hardness_map[npc->y + 1][npc->x] = 0;
       d->terrain_map[npc->y + 1][npc->x] = '#';
-      npc->y += 1;
+      temp_y += 1;
     } else {
       d->hardness_map[npc->y + 1][npc->x] -= 85;
     }
@@ -232,11 +213,11 @@ static void npc_4(character *npc, dungeon *d, character *pc) {
     if (d->hardness_map[npc->y][npc->x - 1] == 255)
       npc->direction = rand() % 4;
     else if (d->hardness_map[npc->y][npc->x - 1] == 0) {
-      npc->x -= 1;
+      temp_x -= 1;
     } else if (d->hardness_map[npc->y][npc->x - 1] < 86) {
       d->hardness_map[npc->y][npc->x - 1] = 0;
       d->terrain_map[npc->y][npc->x - 1] = '#';
-      npc->x -= 1;
+      temp_x -= 1;
     } else {
       d->hardness_map[npc->y][npc->x + 1] -= 85;
     }
@@ -246,17 +227,7 @@ static void npc_4(character *npc, dungeon *d, character *pc) {
     break;
   }
 
-  if (d->character_map[npc->y][npc->x]) {
-    d->character_map[npc->y][npc->x]->hp--;
-
-    if (has_characteristic(d->character_map[npc->y][npc->x]->abilities, PC)) {
-      npc->hp = 0;
-    } else {
-      d->character_map[npc->y][npc->x] = npc;
-    }
-  } else {
-    d->character_map[npc->y][npc->x] = npc;
-  }
+  move_to_new_location(npc, d, temp_x, temp_y);
 }
 
 static void npc_5(character *npc, dungeon *d, character *pc) {
@@ -271,18 +242,8 @@ static void npc_5(character *npc, dungeon *d, character *pc) {
   d->character_map[npc->y][npc->x] = NULL;
 
   if (d->hardness_map[p.ypos][p.xpos] == 0) {
-    npc->y = p.ypos;
-    npc->x = p.xpos;
+    move_to_new_location(npc, d, p.xpos, p.ypos);
 
-    if (d->character_map[npc->y][npc->x]) {
-      d->character_map[npc->y][npc->x]->hp--;
-      if (has_characteristic(d->character_map[npc->y][npc->x]->abilities, PC)) {
-        npc->hp = 0;
-      } else {
-        d->character_map[npc->y][npc->x] = npc;
-      }
-    } else
-      d->character_map[npc->y][npc->x] = npc;
   } else if (d->hardness_map[p.ypos][p.xpos] < 86) {
     npc->y = p.ypos;
     npc->x = p.xpos;
@@ -313,19 +274,8 @@ static void npc_6(character *npc, dungeon *d, character *pc) {
   if (d->hardness_map[temp_y][temp_x] == 0) {
     d->character_map[npc->y][npc->x] = NULL;
 
-    npc->x = temp_x;
-    npc->y = temp_y;
+    move_to_new_location(npc, d, temp_x, temp_y);
 
-    if (d->character_map[npc->y][npc->x]) {
-      d->character_map[npc->y][npc->x]->hp--;
-
-      if (has_characteristic(d->character_map[npc->y][npc->x]->abilities, PC)) {
-        npc->hp = 0;
-      } else {
-        d->character_map[npc->y][npc->x] = npc;
-      }
-    } else
-      d->character_map[npc->y][npc->x] = npc;
   } else if (d->hardness_map[temp_y][temp_x] < 86) {
     d->character_map[npc->y][npc->x] = NULL;
 
@@ -336,6 +286,7 @@ static void npc_6(character *npc, dungeon *d, character *pc) {
     d->terrain_map[npc->y][npc->x] = '#';
 
     d->character_map[npc->y][npc->x] = npc;
+
   } else if (d->hardness_map[temp_y][temp_x] < 255) {
     d->hardness_map[temp_y][temp_x] -= 85;
   }
@@ -351,19 +302,8 @@ static void npc_7(character *npc, dungeon *d, character *pc) {
   if (d->hardness_map[p.ypos][p.xpos] == 0) {
     d->character_map[npc->y][npc->x] = NULL;
 
-    npc->y = p.ypos;
-    npc->x = p.xpos;
+    move_to_new_location(npc, d, p.xpos, p.ypos);
 
-    if (d->character_map[p.ypos][p.xpos]) {
-      d->character_map[p.ypos][p.xpos]->hp--;
-      if (d->character_map[p.ypos][p.xpos] == pc) {
-        npc->hp = 0;
-      } else {
-        d->character_map[npc->y][npc->x] = npc;
-      }
-    } else {
-      d->character_map[npc->y][npc->x] = npc;
-    }
   } else if (d->hardness_map[p.ypos][p.xpos] < 86) {
     d->character_map[npc->y][npc->x] = NULL;
 
@@ -480,7 +420,7 @@ void npc_erratic(character *npc, dungeon *d, character *pc) {
     npc->direction = rand() % 4;
     npc_0(npc, d, pc);
   } else {
-    npc_move_func[npc->abilities & 0x00000007](npc, d, pc);
+    npc_move_func[npc->abilities & MOVEMENT_ABILITIES](npc, d, pc);
   }
 }
 

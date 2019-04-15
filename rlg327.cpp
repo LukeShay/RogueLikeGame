@@ -48,13 +48,18 @@ new_dung:
   render_dungeon_first(d, pc, &mh, fog);
 
   while ((mon = (character *)heap_remove_min(&mh))) {
+    if (pc->hp <= 0) {
+      getch();
+      game_over(LOSE);
+      goto over;
+    }
     if (has_characteristic(mon->abilities, PC)) {
       render_dungeon(d, pc, &mh, fog);
 
       if (mh.size == 0) {
         game_over(WIN);
         goto over;
-      } else if (pc->hp == 0) {
+      } else if (pc->hp <= 0) {
         getch();
         game_over(LOSE);
         goto over;
