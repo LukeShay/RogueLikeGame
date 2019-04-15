@@ -170,6 +170,14 @@ void pickup_item(dungeon *d, character *pc) {
       mvprintw(0, 0, "Item put in slot: %c", equiped_item_symbol[equiped_slot]);
       attroff(COLOR_PAIR(COLOR_RED));
 
+    } else if (equiped_slot == ring_1 && !pc->equiped[ring_2]) {
+      pc->equiped[ring_2] = d->item_map[pc->y][pc->x];
+      d->item_map[pc->y][pc->x] = NULL;
+
+      attron(COLOR_PAIR(COLOR_RED));
+      mvprintw(0, 0, "Item put in slot: %c", equiped_item_symbol[ring_2]);
+      attroff(COLOR_PAIR(COLOR_RED));
+
     } else if (inventory_slot < 10) {
       pc->inventory[inventory_slot] = d->item_map[pc->y][pc->x];
       d->item_map[pc->y][pc->x] = NULL;
@@ -613,7 +621,7 @@ void swap_slot(character *pc, int slot) {
 }
 
 void display_all_items(character *pc) {
-  int print_start = 20, i;
+  int print_start = 14, i;
 
   mvprintw(1, print_start + 2, "***************");
   mvprintw(2, print_start + 2, "** Inventory **");
@@ -628,17 +636,17 @@ void display_all_items(character *pc) {
     }
   }
 
-  mvprintw(1, print_start + 24, "***************");
-  mvprintw(2, print_start + 24, "** Equipment **");
-  mvprintw(3, print_start + 24, "***************");
+  mvprintw(1, print_start + 30, "***************");
+  mvprintw(2, print_start + 30, "** Equipment **");
+  mvprintw(3, print_start + 30, "***************");
 
   for (i = 0; i < sizeof(pc->equiped) / sizeof(pc->equiped[0]); i++) {
     if (pc->equiped[i]) {
-      mvprintw(4 + i, print_start + 22, "%c) %s", equiped_item_symbol[i],
+      mvprintw(4 + i, print_start + 28, "%c) %s", equiped_item_symbol[i],
                pc->equiped[i]->name.c_str());
 
     } else {
-      mvprintw(4 + i, print_start + 22, "%c)", equiped_item_symbol[i]);
+      mvprintw(4 + i, print_start + 28, "%c)", equiped_item_symbol[i]);
     }
   }
 }
@@ -745,6 +753,109 @@ void take_off_item(dungeon *d, character *pc) {
     mvprintw(DISPLAY_MAX_Y, 0, "Use ESC key to exit");
     attroff(COLOR_PAIR(COLOR_RED));
     refresh();
+  }
+}
+
+void display_monster(character *c) {
+  int ch;
+
+  if (c) {
+    clear();
+
+    mvprintw(0, 0, "%s", c->desc.c_str());
+
+    refresh();
+  } else {
+    attron(COLOR_PAIR(COLOR_RED));
+    mvprintw(0, 0, "No monster there         ");
+    attroff(COLOR_PAIR(COLOR_RED));
+  }
+
+  while ((ch = getch()) != 't') {
+  }
+}
+
+void look_at_monster(dungeon *d, character *pc, heap_t *mh) {
+  int c;
+  int new_x = pc->x, new_y = pc->y;
+
+  render_dungeon(d, pc, mh, 0);
+  attron(COLOR_PAIR(COLOR_RED));
+  mvprintw(0, 0, "Looking                    ");
+  mvprintw(DISPLAY_MAX_Y - 1, 0,
+           "Use movement keys to move and \'t\' to look at a monster.");
+  mvprintw(DISPLAY_MAX_Y, 0,
+           "Use ESC key to exit and \'t\' to exit description.");
+  attroff(COLOR_PAIR(COLOR_RED));
+
+  while ((c = getch()) != 27) {
+    switch (c) {
+    case 'y':
+    case '7':
+    case KEY_HOME:
+      new_x = new_x - 1 > 0 ? new_x - 1 : new_x;
+      new_y = new_y - 1 > 0 ? new_y - 1 : new_y;
+      goto move;
+
+    case 'k':
+    case '8':
+    case KEY_UP:
+      new_y = new_y - 1 > 0 ? new_y - 1 : new_y;
+      goto move;
+
+    case 'u':
+    case '9':
+    case KEY_PPAGE:
+      new_x = new_x + 1 < 79 ? new_x + 1 : new_x;
+      new_y = new_y - 1 > 0 ? new_y - 1 : new_y;
+      goto move;
+
+    case 'l':
+    case '6':
+    case KEY_RIGHT:
+      new_x = new_x + 1 < 79 ? new_x + 1 : new_x;
+      goto move;
+
+    case 'n':
+    case '3':
+    case KEY_NPAGE:
+      new_x = new_x + 1 < 79 ? new_x + 1 : new_x;
+      new_y = new_y + 1 < 79 ? new_y + 1 : new_y;
+      goto move;
+
+    case 'j':
+    case '2':
+    case KEY_DOWN:
+      new_y = new_y + 1 < 79 ? new_y + 1 : new_y;
+      goto move;
+
+    case 'b':
+    case '1':
+    case KEY_END:
+      new_x = new_x - 1 > 0 ? new_x - 1 : new_x;
+      new_y = new_y + 1 < 79 ? new_y + 1 : new_y;
+      goto move;
+
+    case 'h':
+    case '4':
+    case KEY_LEFT:
+      new_x = new_x - 1 > 0 ? new_x - 1 : new_x;
+      goto move;
+
+    case 't':
+      display_monster(d->character_map[new_y][new_x]);
+      goto move;
+    }
+  move:
+    render_dungeon(d, pc, mh, 0);
+    attron(COLOR_PAIR(COLOR_RED));
+    mvprintw(0, 0, "Looking                    ");
+    mvprintw(DISPLAY_MAX_Y - 1, 0,
+             "Use movement keys to move and \'t\' to look at a monster.");
+    mvprintw(DISPLAY_MAX_Y, 0,
+             "Use ESC key to exit and \'t\' to exit description.");
+    attroff(COLOR_PAIR(COLOR_RED));
+    mvprintw(new_y + 1, new_x, "*");
   }
 }
 
@@ -878,7 +989,7 @@ int move_pc(dungeon *d, character *pc, heap_t *mh, int fog) {
     return TELEPORT;
 
   case 'L':
-    // look_at_monster(d, pc);
+    look_at_monster(d, pc, mh);
     return TELEPORT;
 
   case ',':
