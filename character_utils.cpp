@@ -75,6 +75,39 @@ static void move_to_new_location(character *npc, dungeon *d, int temp_x,
     npc->y = temp_y;
     d->character_map[npc->y][npc->x] = npc;
   }
+
+  // int equiped_slot, inventory_slot;
+
+  if (d->item_map[npc->y][npc->x]) {
+    if (has_characteristic(npc->abilities, DESTROY)) {
+      delete d->item_map[npc->y][npc->x];
+      d->item_map[npc->y][npc->x] = NULL;
+      /*for (std::vector<item_desc>::iterator it = iv->begin(); it < iv->end();
+           it++) {
+        if (!it->name.compare(d->item_map[npc->y][npc->x]->name)) {
+          it->destroyed = 1;
+
+          delete d->item_map[npc->y][npc->x];
+          d->item_map[npc->y][npc->x] = NULL;
+        }
+      }*/
+    } else if (has_characteristic(npc->abilities, PICKUP)) {
+      delete d->item_map[npc->y][npc->x];
+      d->item_map[npc->y][npc->x] = NULL;
+
+      /*equiped_slot = item_slot(d->item_map[npc->y][npc->x]->type);
+
+      if (!npc->equiped[equiped_slot]) {
+        npc->equiped[equiped_slot] = d->item_map[npc->y][npc->x];
+        d->item_map[npc->y][npc->x] = NULL;
+
+      } else if (equiped_slot == ring_1 && !npc->equiped[ring_2]) {
+        npc->equiped[ring_2] = d->item_map[npc->y][npc->x];
+        d->item_map[npc->y][npc->x] = NULL;
+      } else {
+      }*/
+    }
+  }
 }
 
 static void npc_0(character *npc, dungeon *d, character *pc) {

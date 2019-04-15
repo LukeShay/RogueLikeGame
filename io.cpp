@@ -244,18 +244,33 @@ int item_symbol(item *i) {
 }
 
 int valid_move(dungeon *d, uint8_t x, uint8_t y, character *pc) {
+  int temp_ad = pc->ad.roll_dice();
+
   if (d->hardness_map[y][x] != 0)
     return MOVE_INVALID;
 
   if (d->character_map[y][x]) {
-    d->character_map[y][x]->hp = 0;
+    for (int i = 0; i < 12; i++) {
+      if (pc->equiped[i]) {
+        temp_ad = pc->equiped[i]->damage_bonus;
+      }
+    }
+
+    d->character_map[y][x]->hp -= temp_ad;
+
+    if (d->character_map[y][x]->hp <= 0) {
+      d->character_map[pc->y][pc->x] = NULL;
+      pc->y = y;
+      pc->x = x;
+      d->character_map[y][x] = pc;
+    }
+
+  } else {
+    d->character_map[pc->y][pc->x] = NULL;
+    pc->y = y;
+    pc->x = x;
+    d->character_map[y][x] = pc;
   }
-
-  d->character_map[pc->y][pc->x] = NULL;
-  pc->y = y;
-  pc->x = x;
-
-  d->character_map[y][x] = pc;
 
   return MOVE_VALID;
 }

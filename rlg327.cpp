@@ -100,7 +100,7 @@ new_dung:
         }
       }
 
-    } else if (mon->hp != 0) {
+    } else if (mon->hp > 0) {
       move_monster(d, mon, pc);
     }
 
