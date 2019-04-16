@@ -56,12 +56,6 @@ new_dung:
     if (has_characteristic(mon->abilities, PC)) {
       render_dungeon(d, pc, &mh, fog);
 
-      if (pc->hp <= 0) {
-        getch();
-        game_over(LOSE);
-        goto over;
-      }
-
       while (move == MOVE_INVALID || move >= INVALID_KEY) {
         move = move_pc(d, mon, &mh, &iv, fog);
         d->update_pc_map(mon->x, mon->y);
@@ -119,6 +113,7 @@ new_dung:
 over:
 
   // delete pc;
+  heap_delete(&mh);
   delete d;
 
   return 0;
