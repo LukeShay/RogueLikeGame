@@ -92,7 +92,6 @@ static void move_to_new_location(character *npc, dungeon *d, int temp_x,
         }
       }*/
     } else if (has_characteristic(npc->abilities, PICKUP)) {
-      delete d->item_map[npc->y][npc->x];
       d->item_map[npc->y][npc->x] = NULL;
 
       /*equiped_slot = item_slot(d->item_map[npc->y][npc->x]->type);

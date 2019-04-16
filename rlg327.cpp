@@ -56,10 +56,7 @@ new_dung:
     if (has_characteristic(mon->abilities, PC)) {
       render_dungeon(d, pc, &mh, fog);
 
-      if (mh.size == 0) {
-        game_over(WIN);
-        goto over;
-      } else if (pc->hp <= 0) {
+      if (pc->hp <= 0) {
         getch();
         game_over(LOSE);
         goto over;

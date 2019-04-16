@@ -372,27 +372,20 @@ void render_dungeon_teleport(dungeon *d, character *pc, heap_t *mh, int fog) {
 
   for (y = 0; y < DUNGEON_Y; y++) {
     for (x = 0; x < DUNGEON_X; x++) {
-      if (x == pc->x && y == pc->y) {
+      if (d->character_map[y][x] && d->character_map[y][x] != pc) {
+        i = determine_color(d->character_map[y][x]->color);
 
-        attron(COLOR_PAIR(COLOR_CYAN));
-        mvaddch(y + 1, x, '@');
-        attroff(COLOR_PAIR(COLOR_CYAN));
+        attron(COLOR_PAIR(i));
+        mvaddch(y + 1, x, d->character_map[y][x]->symbol);
+        attroff(COLOR_PAIR(i));
+      } else if (d->item_map[y][x]) {
+        i = determine_color(d->item_map[y][x]->color);
+
+        attron(COLOR_PAIR(i));
+        mvaddch(y + 1, x, symbol[item_symbol(d->item_map[y][x])]);
+        attroff(COLOR_PAIR(i));
       } else {
-        if (d->character_map[y][x] && d->character_map[y][x] != pc) {
-          i = determine_color(d->character_map[y][x]->color);
-
-          attron(COLOR_PAIR(i));
-          mvaddch(y + 1, x, d->character_map[y][x]->symbol);
-          attroff(COLOR_PAIR(i));
-        } else if (d->item_map[y][x]) {
-          i = determine_color(d->item_map[y][x]->color);
-
-          attron(COLOR_PAIR(i));
-          mvaddch(y + 1, x, symbol[item_symbol(d->item_map[y][x])]);
-          attroff(COLOR_PAIR(i));
-        } else {
-          mvaddch(y + 1, x, d->terrain_map[y][x]);
-        }
+        mvaddch(y + 1, x, d->terrain_map[y][x]);
       }
     }
   }
@@ -621,6 +614,7 @@ void destroy_item(dungeon *d, character *pc, std::vector<item_desc> *iv) {
         it->destroyed = 1;
         delete d->item_map[pc->y][pc->x];
         d->item_map[pc->y][pc->x] = NULL; // Causing seg fault
+        break;
       }
     }
   }
@@ -1141,9 +1135,16 @@ void render_dungeon(dungeon *d, character *pc, heap_t *mh, int fog) {
           mvaddch(y + 1, x, symbol[item_symbol(d->item_map[y][x])]);
           attroff(COLOR_PAIR(i));
 
+        } else if (y >= pc->y - PC_RADIUS &&
+            y <= pc->y + PC_RADIUS && x >= pc->x - PC_RADIUS &&
+            x <= pc->x + PC_RADIUS) {
+          attron(A_BOLD);
+          mvaddch(y + 1, x, d->pc_map[y][x]);
+          attroff(A_BOLD);
         } else {
           mvaddch(y + 1, x, d->pc_map[y][x]);
         }
+
       } else {
         if (d->character_map[y][x]) {
           i = determine_color(d->character_map[y][x]->color);
@@ -1197,6 +1198,13 @@ void render_dungeon_first(dungeon *d, character *pc, heap_t *mh, int fog) {
           mvaddch(y + 1, x, symbol[item_symbol(d->item_map[y][x])]);
           attroff(COLOR_PAIR(i));
 
+        } else if (y >= pc->y - PC_RADIUS &&
+            y <= pc->y + PC_RADIUS && x >= pc->x - PC_RADIUS &&
+            x <= pc->x + PC_RADIUS) {
+          attron(A_BOLD); 
+          mvaddch(y + 1, x, d->pc_map[y][x]);
+          attroff(A_BOLD);
+ 
         } else {
           mvaddch(y + 1, x, d->pc_map[y][x]);
         }
@@ -1282,9 +1290,7 @@ void game_over(int result) {
   else if (result == WIN)
     mvprintw(0, 10, victory);
   else {
-    attron(A_BOLD);
     mvprintw(10, 20, quitter);
-    attroff(A_BOLD);
   }
 
   refresh();

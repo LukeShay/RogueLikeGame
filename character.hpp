@@ -9,7 +9,7 @@
 #define TELE 0x00000002
 #define TUNNEL 0x00000004
 #define ERRATIC 0x00000008
-#define PASS 0x00000010
+#define PASS 0x00000010 // Cannot have tunnel
 #define PICKUP 0x00000020
 #define DESTROY 0x00000040
 #define UNIQ 0x00000080
@@ -17,7 +17,7 @@
 #define PC 0x00000200
 #define DUNGEON_X 80
 #define DUNGEON_Y 21
-#define MOVEMENT_ABILITIES 15
+#define MOVEMENT_ABILITIES 15 // Will be 32 when pass is implemented
 
 #define has_characteristic(characteristic, bit) (characteristic & bit)
 
