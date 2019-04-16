@@ -58,3 +58,15 @@ int character_desc::parse_abilities() {
 
   return ret_ability;
 }
+
+int character::get_speed() {
+  int i, ret_speed = speed;
+
+  for (i = 0; i < 12; i++) {
+    if (equiped[i]) {
+      ret_speed += equiped[i]->speed_bonus;
+    }
+  }
+
+  return ret_speed;
+}

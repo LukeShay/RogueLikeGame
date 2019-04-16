@@ -101,7 +101,7 @@ new_dung:
       move_monster(d, mon, pc);
     }
 
-    mon->p += (1000 / mon->speed);
+    mon->p += (1000 / mon->get_speed());
 
     if (mon->hp > 0) {
       heap_insert(&mh, mon);
