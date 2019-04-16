@@ -259,6 +259,10 @@ int valid_move(dungeon *d, uint8_t x, uint8_t y, character *pc) {
     d->character_map[y][x]->hp -= temp_ad;
 
     if (d->character_map[y][x]->hp <= 0) {
+      if(has_characteristic(d->character_map[y][x]->abilities, BOSS)) {
+        game_over(WIN);
+      }
+
       d->character_map[pc->y][pc->x] = NULL;
       pc->y = y;
       pc->x = x;
