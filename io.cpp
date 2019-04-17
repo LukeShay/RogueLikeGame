@@ -376,20 +376,30 @@ void render_dungeon_teleport(dungeon *d, character *pc, heap_t *mh, int fog) {
 
   for (y = 0; y < DUNGEON_Y; y++) {
     for (x = 0; x < DUNGEON_X; x++) {
-      if (d->character_map[y][x] && d->character_map[y][x] != pc) {
-        i = determine_color(d->character_map[y][x]->color);
+          
+      if(x == pc->x && y == pc->y){
+        i = COLOR_CYAN;
 
         attron(COLOR_PAIR(i));
-        mvaddch(y + 1, x, d->character_map[y][x]->symbol);
+        mvaddch(y + 1, x, '@');
         attroff(COLOR_PAIR(i));
-      } else if (d->item_map[y][x]) {
-        i = determine_color(d->item_map[y][x]->color);
+      }
+      else {
+        if (d->character_map[y][x] && d->character_map[y][x] != pc) {
+          i = determine_color(d->character_map[y][x]->color);
 
-        attron(COLOR_PAIR(i));
-        mvaddch(y + 1, x, symbol[item_symbol(d->item_map[y][x])]);
-        attroff(COLOR_PAIR(i));
-      } else {
-        mvaddch(y + 1, x, d->terrain_map[y][x]);
+          attron(COLOR_PAIR(i));
+          mvaddch(y + 1, x, d->character_map[y][x]->symbol);
+          attroff(COLOR_PAIR(i));
+        } else if (d->item_map[y][x]) {
+          i = determine_color(d->item_map[y][x]->color);
+
+          attron(COLOR_PAIR(i));
+          mvaddch(y + 1, x, symbol[item_symbol(d->item_map[y][x])]);
+          attroff(COLOR_PAIR(i));
+        } else {
+          mvaddch(y + 1, x, d->terrain_map[y][x]);
+        }
       }
     }
   }

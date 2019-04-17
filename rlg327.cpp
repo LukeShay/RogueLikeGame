@@ -61,9 +61,11 @@ new_dung:
         d->update_pc_map(mon->x, mon->y);
 
         if (move == MOVE_INVALID) {
+          render_dungeon(d, pc, &mh, fog);
           invalid_move();
 
         } else if (move == INVALID_KEY) {
+          render_dungeon(d, pc, &mh, fog);
           invalid_key();
 
         } else if (move == MOVE_STAIR) {
@@ -114,6 +116,7 @@ over:
 
   // delete pc;
   heap_delete(&mh);
+  d->~dungeon();
   delete d;
 
   return 0;
