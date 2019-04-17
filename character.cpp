@@ -4,7 +4,19 @@
 #include <iostream>
 
 character::character() {}
-character::~character() {}
+character::~character() {
+  int i;
+
+  for (i = 0; i < 12; i++) {
+    if (equiped[i]) {
+      delete equiped[i];
+    }
+
+    if (i < 10 && inventory[i]) {
+      delete inventory[i];
+    } 
+  }
+}
 
 void character::pick_location(character *character_map[DUNGEON_Y][DUNGEON_X],
                               uint8_t hardness_map[DUNGEON_Y][DUNGEON_X]) {

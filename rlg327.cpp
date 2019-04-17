@@ -31,7 +31,7 @@ int main(void) {
 
   move = 0;
   pc = new character;
-  d = new dungeon(pc, 1000, 10, save);
+  d = new dungeon(pc, INT_MAX, 10, save);
 
   parse(&mv, &iv);
 
@@ -60,7 +60,7 @@ new_dung:
         move = move_pc(d, mon, &mh, &iv, fog);
         d->update_pc_map(mon->x, mon->y);
 
-        if (move == MOVE_INVALID) {
+        /*if (move == MOVE_INVALID) {
           render_dungeon(d, pc, fog);
           invalid_move();
 
@@ -68,7 +68,7 @@ new_dung:
           render_dungeon(d, pc, fog);
           invalid_key();
 
-        } else if (move == MOVE_STAIR) {
+        } else*/ if (move == MOVE_STAIR) {
 
           heap_reset(&mh);
 
@@ -96,8 +96,12 @@ new_dung:
     } else if (mon->hp > 0) {
       move_monster(d, mon, pc);
     }
-
-    mon->p += (1000 / mon->get_speed());
+    
+    if (has_characteristic(mon->abilities, PC)) {
+      mon->p += 1000 / mon->get_speed();
+    } else {
+      mon->p += 1000 / mon->speed;
+    }
 
     if (mon->hp > 0) {
       heap_insert(&mh, mon);

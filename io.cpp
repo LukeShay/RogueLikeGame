@@ -252,7 +252,7 @@ int valid_move(dungeon *d, uint8_t x, uint8_t y, character *pc) {
   if (d->character_map[y][x]) {
     for (int i = 0; i < 12; i++) {
       if (pc->equiped[i]) {
-        temp_ad = pc->equiped[i]->damage_bonus;
+        temp_ad += pc->equiped[i]->damage_bonus;
       }
     }
 
