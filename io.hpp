@@ -22,8 +22,7 @@
 void io_init_terminal(void);
 int move_pc(dungeon *d, character *pc, heap_t *mh, std::vector<item_desc> *iv,
             int fog);
-void render_dungeon(dungeon *d, character *pc, heap_t *mh, int fog);
-void render_dungeon_first(dungeon *d, character *pc, heap_t *mh, int fog);
+void render_dungeon(dungeon *d, character *pc, int fog);
 void display_tunneling_map(dungeon *d);
 void display_non_tunneling_map(dungeon *d);
 void display_default_map(dungeon *d);

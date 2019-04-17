@@ -63,7 +63,7 @@ int character::get_speed() {
   int i, ret_speed = speed;
 
   for (i = 0; i < 12; i++) {
-    if (equiped[i] && equiped[i]->speed_bonus) {
+    if (equiped[i] && equiped[i]->speed_bonus > 0) {
       ret_speed += equiped[i]->speed_bonus; 
     }
   }

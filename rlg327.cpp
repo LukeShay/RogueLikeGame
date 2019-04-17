@@ -45,7 +45,7 @@ new_dung:
   generate_monsters(d, &mh, &mv);
   generate_items(d, &iv);
 
-  render_dungeon_first(d, pc, &mh, fog);
+  render_dungeon(d, pc, fog);
 
   while ((mon = (character *)heap_remove_min(&mh))) {
     if (pc->hp <= 0) {
@@ -54,18 +54,18 @@ new_dung:
       goto over;
     }
     if (has_characteristic(mon->abilities, PC)) {
-      render_dungeon(d, pc, &mh, fog);
+      render_dungeon(d, pc, fog);
 
       while (move == MOVE_INVALID || move >= INVALID_KEY) {
         move = move_pc(d, mon, &mh, &iv, fog);
         d->update_pc_map(mon->x, mon->y);
 
         if (move == MOVE_INVALID) {
-          render_dungeon(d, pc, &mh, fog);
+          render_dungeon(d, pc, fog);
           invalid_move();
 
         } else if (move == INVALID_KEY) {
-          render_dungeon(d, pc, &mh, fog);
+          render_dungeon(d, pc, fog);
           invalid_key();
 
         } else if (move == MOVE_STAIR) {
@@ -86,10 +86,10 @@ new_dung:
         } else if (move == FOG_TOGGLE) {
           fog = fog == 1 ? 0 : 1;
 
-          render_dungeon(d, pc, &mh, fog);
+          render_dungeon(d, pc, fog);
 
         } else if (move == TELEPORT) {
-          render_dungeon(d, pc, &mh, fog);
+          render_dungeon(d, pc, fog);
         }
       }
 

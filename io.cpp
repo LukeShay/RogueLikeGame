@@ -369,7 +369,7 @@ int determine_color(std::string color) {
   }
 }
 
-void render_dungeon_teleport(dungeon *d, character *pc, heap_t *mh, int fog) {
+void render_dungeon_teleport(dungeon *d, character *pc, int fog) {
   int x, y, i;
 
   clear();
@@ -404,19 +404,18 @@ void render_dungeon_teleport(dungeon *d, character *pc, heap_t *mh, int fog) {
     }
   }
 
-  mvprintw(DISPLAY_MAX_Y - 1, DISPLAY_MAX_X - 9, "   HP: %2d", pc->hp);
-  mvprintw(DISPLAY_MAX_Y, DISPLAY_MAX_X - 12, "Monsters: %2d", mh->size);
+  mvprintw(DISPLAY_MAX_Y, DISPLAY_MAX_X - 25, "HP: %d   Speed: %d", pc->hp, pc->get_speed());
 
   refresh();
 }
 
-void teleport_pc(dungeon *d, character *pc, heap_t *mh, int fog) {
+void teleport_pc(dungeon *d, character *pc, int fog) {
   int c;
   int new_x, new_y;
 
   d->character_map[pc->y][pc->x] = NULL;
 
-  render_dungeon_teleport(d, pc, mh, 0);
+  render_dungeon_teleport(d, pc, 0);
   attron(COLOR_PAIR(COLOR_RED));
   mvprintw(0, 0, "Teleporting                  ");
   attroff(COLOR_PAIR(COLOR_RED));
@@ -493,7 +492,7 @@ void teleport_pc(dungeon *d, character *pc, heap_t *mh, int fog) {
       if (c == 'r')
         goto done;
     }
-    render_dungeon_teleport(d, pc, mh, 0);
+    render_dungeon_teleport(d, pc, 0);
     attron(COLOR_PAIR(COLOR_RED));
     mvprintw(0, 0, "Teleporting                  ");
     attroff(COLOR_PAIR(COLOR_RED));
@@ -507,13 +506,12 @@ done:
 
   d->character_map[pc->y][pc->x] = pc;
 
-  render_dungeon(d, pc, mh, fog);
+  render_dungeon(d, pc, fog);
 }
 
 void display_item(character *pc, int equiped, int item_slot) {
   if (equiped && pc->equiped[item_slot]) {
     mvprintw(0, 0, "%s", pc->equiped[item_slot]->desc.c_str());
-
   } else if (!equiped && pc->inventory[item_slot]) {
     mvprintw(0, 0, "%s", pc->inventory[item_slot]->desc.c_str());
   } else {
@@ -797,6 +795,7 @@ void display_monster(character *c) {
     clear();
 
     mvprintw(0, 0, "%s", c->desc.c_str());
+    mvprintw(DISPLAY_MAX_Y - 3, 0, "Speed: %d   Hitpoints: %d   AD: %s", c->get_speed(), c->hp, c->ad.form.c_str());
 
     refresh();
   } else {
@@ -813,7 +812,7 @@ void look_at_monster(dungeon *d, character *pc, heap_t *mh) {
   int c;
   int new_x = pc->x, new_y = pc->y;
 
-  render_dungeon(d, pc, mh, 0);
+  render_dungeon(d, pc, 0);
   attron(COLOR_PAIR(COLOR_RED));
   mvprintw(0, 0, "Looking                    ");
   mvprintw(DISPLAY_MAX_Y - 1, 0,
@@ -881,7 +880,7 @@ void look_at_monster(dungeon *d, character *pc, heap_t *mh) {
       goto move;
     }
   move:
-    render_dungeon(d, pc, mh, 0);
+    render_dungeon(d, pc, 0);
     attron(COLOR_PAIR(COLOR_RED));
     mvprintw(0, 0, "Looking                    ");
     mvprintw(DISPLAY_MAX_Y - 1, 0,
@@ -1022,22 +1021,22 @@ int move_pc(dungeon *d, character *pc, heap_t *mh, std::vector<item_desc> *iv,
 
   case 'm':
     list_monsters(d, pc);
-    render_dungeon(d, pc, mh, fog);
+    render_dungeon(d, pc, fog);
     return LIST_MONSTERS;
 
   case 'T':
     display_tunneling_map(d);
-    render_dungeon(d, pc, mh, fog);
+    render_dungeon(d, pc, fog);
     return TUNNELING_MAP;
 
   case 'D':
     display_non_tunneling_map(d);
-    render_dungeon(d, pc, mh, fog);
+    render_dungeon(d, pc, fog);
     return NON_TUNNELING_MAP;
 
   case 's':
     display_default_map(d);
-    render_dungeon(d, pc, mh, fog);
+    render_dungeon(d, pc, fog);
     return DEFAULT_MAP;
 
   case 'q':
@@ -1047,7 +1046,7 @@ int move_pc(dungeon *d, character *pc, heap_t *mh, std::vector<item_desc> *iv,
     return FOG_TOGGLE;
 
   case 'g':
-    teleport_pc(d, pc, mh, fog);
+    teleport_pc(d, pc, fog);
     return TELEPORT;
 
   case 'w':
@@ -1121,7 +1120,7 @@ void invalid_key() {
   attroff(COLOR_PAIR(COLOR_RED));
 }
 
-void render_dungeon(dungeon *d, character *pc, heap_t *mh, int fog) {
+void render_dungeon(dungeon *d, character *pc, int fog) {
   int x, y, i;
 
   clear();
@@ -1180,71 +1179,7 @@ void render_dungeon(dungeon *d, character *pc, heap_t *mh, int fog) {
     }
   }
 
-  mvprintw(DISPLAY_MAX_Y - 1, DISPLAY_MAX_X - 9, "   HP: %2d", pc->hp);
-  mvprintw(DISPLAY_MAX_Y, DISPLAY_MAX_X - 12, "Monsters: %2d", mh->size);
-
-  refresh();
-}
-
-void render_dungeon_first(dungeon *d, character *pc, heap_t *mh, int fog) {
-  int x, y, i;
-
-  clear();
-
-  for (y = 0; y < DUNGEON_Y; y++) {
-    for (x = 0; x < DUNGEON_X; x++) {
-      if (fog) {
-        if (d->character_map[y][x] && y >= pc->y - PC_RADIUS &&
-            y <= pc->y + PC_RADIUS && x >= pc->x - PC_RADIUS &&
-            x <= pc->x + PC_RADIUS) {
-          i = determine_color(d->character_map[y][x]->color);
-
-          attron(COLOR_PAIR(i));
-          mvaddch(y + 1, x, d->character_map[y][x]->symbol);
-          attroff(COLOR_PAIR(i));
-
-        } else if (d->item_map[y][x] && y >= pc->y - PC_RADIUS &&
-                   y <= pc->y + PC_RADIUS && x >= pc->x - PC_RADIUS &&
-                   x <= pc->x + PC_RADIUS) {
-          i = determine_color(d->item_map[y][x]->color);
-
-          attron(COLOR_PAIR(i));
-          mvaddch(y + 1, x, symbol[item_symbol(d->item_map[y][x])]);
-          attroff(COLOR_PAIR(i));
-
-        } else if (y >= pc->y - PC_RADIUS &&
-            y <= pc->y + PC_RADIUS && x >= pc->x - PC_RADIUS &&
-            x <= pc->x + PC_RADIUS) {
-          attron(A_BOLD); 
-          mvaddch(y + 1, x, d->pc_map[y][x]);
-          attroff(A_BOLD);
- 
-        } else {
-          mvaddch(y + 1, x, d->pc_map[y][x]);
-        }
-      } else {
-        if (d->character_map[y][x]) {
-          i = determine_color(d->character_map[y][x]->color);
-
-          attron(COLOR_PAIR(i));
-          mvaddch(y + 1, x, d->character_map[y][x]->symbol);
-          attroff(COLOR_PAIR(i));
-        } else if (d->item_map[y][x]) {
-          i = determine_color(d->item_map[y][x]->color);
-
-          attron(COLOR_PAIR(i));
-          mvaddch(y + 1, x, symbol[item_symbol(d->item_map[y][x])]);
-          attroff(COLOR_PAIR(i));
-
-        } else {
-          mvaddch(y + 1, x, d->terrain_map[y][x]);
-        }
-      }
-    }
-  }
-
-  mvprintw(DISPLAY_MAX_Y - 1, DISPLAY_MAX_X - 9, "   HP: %2d", pc->hp);
-  mvprintw(DISPLAY_MAX_Y, DISPLAY_MAX_X - 12, "Monsters: %2d", mh->size - 1);
+  mvprintw(DISPLAY_MAX_Y, DISPLAY_MAX_X - 25, "HP: %d   Speed: %d", pc->hp, pc->get_speed());
 
   refresh();
 }
