@@ -44,6 +44,14 @@ dungeon::dungeon(character *pc_char, int num_lives, int num_mon,
                  action_t action) {
   point_t pc;
 
+  int x, y;
+  for (y = 0; y < DUNGEON_Y; y++) {
+    for (x = 0; x < DUNGEON_X; x++) {
+      item_map[y][x] = NULL;
+      character_map[y][x] = NULL;
+    }
+  }
+
   if (action == save || action == savenummon || action == num_mon) {
     pc = generate_dungeon();
   } else if (action == load || action == loadnummon) {
