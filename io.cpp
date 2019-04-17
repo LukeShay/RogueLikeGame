@@ -96,6 +96,26 @@ const char *gg =
 const char *quitter = "\"Champions don't quit.\" - Mike Tython\n\n\n           "
                       "           (Formally known as \'Mike Tyson\')";
 
+int determine_color(std::string color) {
+  if (!color.compare("RED")) {
+    return COLOR_RED;
+  } else if (!color.compare("BLUE")) {
+    return COLOR_BLUE;
+  } else if (!color.compare("MAGENTA")) {
+    return COLOR_MAGENTA;
+  } else if (!color.compare("YELLOW")) {
+    return COLOR_YELLOW;
+  } else if (!color.compare("BLACK")) {
+    return COLOR_BLACK;
+  } else if (!color.compare("CYAN")) {
+    return COLOR_CYAN;
+  } else if (!color.compare("GREEN")) {
+    return COLOR_GREEN;
+  } else {
+    return COLOR_WHITE;
+  }
+}
+
 void render_pc_inventory(character *pc) {
   int print_start = 26, i;
   char c;
@@ -252,7 +272,7 @@ int valid_move(dungeon *d, uint8_t x, uint8_t y, character *pc) {
   if (d->character_map[y][x]) {
     for (int i = 0; i < 12; i++) {
       if (pc->equiped[i]) {
-        temp_ad += pc->equiped[i]->damage_bonus;
+        temp_ad += pc->equiped[i]->damage_bonus.roll_dice();
       }
     }
 
@@ -318,8 +338,11 @@ int list_monsters(dungeon *d, character *pc) {
           if (num >= num_initial) {
             num_on_screen++;
             k++;
-
-            mvprintw(k, print_start, "%c:", d->character_map[i][j]->symbol);
+            
+            attron(COLOR_PAIR(determine_color(d->character_map[i][j]->color)));
+            mvprintw(k, print_start, "%c", d->character_map[i][j]->symbol);
+            attroff(COLOR_PAIR(determine_color(d->character_map[i][j]->color)));
+            mvprintw(k, print_start + 1, ":", d->character_map[i][j]->symbol);
 
             if (i - pc->y < 0) {
               mvprintw(k, print_start + 2, "%3d north, ", pc->y - i);
@@ -347,26 +370,6 @@ int list_monsters(dungeon *d, character *pc) {
   } while (((c = getch()) != 27));
 
   return 0;
-}
-
-int determine_color(std::string color) {
-  if (!color.compare("RED")) {
-    return COLOR_RED;
-  } else if (!color.compare("BLUE")) {
-    return COLOR_BLUE;
-  } else if (!color.compare("MAGENTA")) {
-    return COLOR_MAGENTA;
-  } else if (!color.compare("YELLOW")) {
-    return COLOR_YELLOW;
-  } else if (!color.compare("BLACK")) {
-    return COLOR_BLACK;
-  } else if (!color.compare("CYAN")) {
-    return COLOR_CYAN;
-  } else if (!color.compare("GREEN")) {
-    return COLOR_GREEN;
-  } else {
-    return COLOR_WHITE;
-  }
 }
 
 void render_dungeon_teleport(dungeon *d, character *pc, int fog) {
@@ -947,6 +950,152 @@ void drop_item(dungeon *d, character *pc) {
   } while ((c = getch()) != 27);
 }
 
+void io_init_terminal() {
+  initscr();
+  raw();
+  noecho();
+  curs_set(0);
+  keypad(stdscr, TRUE);
+
+  start_color();
+  init_pair(COLOR_RED, COLOR_RED, COLOR_BLACK);
+  init_pair(COLOR_CYAN, COLOR_CYAN, COLOR_BLACK);
+  init_pair(COLOR_BLUE, COLOR_BLUE, COLOR_BLACK);
+  init_pair(COLOR_YELLOW, COLOR_YELLOW, COLOR_BLACK);
+  init_pair(COLOR_WHITE, COLOR_WHITE, COLOR_BLACK);
+  init_pair(COLOR_BLACK, COLOR_WHITE, COLOR_BLACK);
+  init_pair(COLOR_GREEN, COLOR_GREEN, COLOR_BLACK);
+  init_pair(COLOR_MAGENTA, COLOR_MAGENTA, COLOR_BLACK);
+}
+
+void render_dungeon(dungeon *d, character *pc, int fog) {
+  int x, y, i;
+
+  clear();
+
+  for (y = 0; y < DUNGEON_Y; y++) {
+    for (x = 0; x < DUNGEON_X; x++) {
+      if (fog) {
+        if (d->character_map[y][x] && y >= pc->y - PC_RADIUS &&
+            y <= pc->y + PC_RADIUS && x >= pc->x - PC_RADIUS &&
+            x <= pc->x + PC_RADIUS) {
+
+          i = determine_color(d->character_map[y][x]->color);
+
+          attron(COLOR_PAIR(i));
+          mvaddch(y + 1, x, d->character_map[y][x]->symbol);
+          attroff(COLOR_PAIR(i));
+
+        } else if (d->item_map[y][x] && y >= pc->y - PC_RADIUS &&
+                   y <= pc->y + PC_RADIUS && x >= pc->x - PC_RADIUS &&
+                   x <= pc->x + PC_RADIUS) {
+
+          i = determine_color(d->item_map[y][x]->color);
+
+          attron(COLOR_PAIR(i));
+          mvaddch(y + 1, x, symbol[item_symbol(d->item_map[y][x])]);
+          attroff(COLOR_PAIR(i));
+
+        } else if (y >= pc->y - PC_RADIUS &&
+            y <= pc->y + PC_RADIUS && x >= pc->x - PC_RADIUS &&
+            x <= pc->x + PC_RADIUS) {
+          attron(A_BOLD);
+          mvaddch(y + 1, x, d->pc_map[y][x]);
+          attroff(A_BOLD);
+        } else {
+          mvaddch(y + 1, x, d->pc_map[y][x]);
+        }
+
+      } else {
+        if (d->character_map[y][x]) {
+          i = determine_color(d->character_map[y][x]->color);
+
+          attron(COLOR_PAIR(i));
+          mvaddch(y + 1, x, d->character_map[y][x]->symbol);
+          attroff(COLOR_PAIR(i));
+        } else if (d->item_map[y][x]) {
+          i = determine_color(d->item_map[y][x]->color);
+
+          attron(COLOR_PAIR(i));
+          mvaddch(y + 1, x, symbol[item_symbol(d->item_map[y][x])]);
+          attroff(COLOR_PAIR(i));
+
+        } else {
+          mvaddch(y + 1, x, d->terrain_map[y][x]);
+        }
+      }
+    }
+  }
+
+  mvprintw(DISPLAY_MAX_Y, DISPLAY_MAX_X - 25, "HP: %d   Speed: %d", pc->hp, pc->get_speed());
+
+  refresh();
+}
+
+void display_tunneling_map(dungeon *d) {
+  int x, y, c;
+
+  do {
+    clear();
+    for (y = 0; y < DUNGEON_Y; y++) {
+      for (x = 0; x < DUNGEON_X; x++) {
+        mvprintw(y + 1, x, "%d", d->cost_t_map[y][x] % 10);
+      }
+    }
+    refresh();
+  } while ((c = getch()) != 27);
+}
+
+void display_non_tunneling_map(dungeon *d) {
+  int x, y, c;
+
+  do {
+    clear();
+    for (y = 0; y < DUNGEON_Y; y++) {
+      for (x = 0; x < DUNGEON_X; x++) {
+        if (d->cost_nt_map[y][x] == INT_MAX) {
+          mvaddch(y + 1, x, ' ');
+
+        } else {
+          mvprintw(y + 1, x, "%d", d->cost_nt_map[y][x] % 10);
+        }
+      }
+    }
+    refresh();
+  } while ((c = getch()) != 27);
+}
+
+void display_default_map(dungeon *d) {
+  int x, y, c;
+
+  do {
+    clear();
+    for (y = 0; y < DUNGEON_Y; y++) {
+      for (x = 0; x < DUNGEON_X; x++) {
+        mvaddch(y + 1, x, d->terrain_map[y][x]);
+      }
+    }
+    refresh();
+  } while ((c = getch()) != 27);
+}
+
+void game_over(int result) {
+  clear();
+
+  if (result == LOSE)
+    mvprintw(0, 10, gg);
+  else if (result == WIN)
+    mvprintw(0, 10, victory);
+  else {
+    mvprintw(10, 20, quitter);
+  }
+
+  refresh();
+  getch();
+  endwin();
+  exit(0);
+}
+
 int move_pc(dungeon *d, character *pc, heap_t *mh, std::vector<item_desc> *iv,
             int fog) {
   int c = getch();
@@ -1088,162 +1237,4 @@ int move_pc(dungeon *d, character *pc, heap_t *mh, std::vector<item_desc> *iv,
   default:
     return INVALID_KEY;
   }
-}
-
-void io_init_terminal() {
-  initscr();
-  raw();
-  noecho();
-  curs_set(0);
-  keypad(stdscr, TRUE);
-
-  start_color();
-  init_pair(COLOR_RED, COLOR_RED, COLOR_BLACK);
-  init_pair(COLOR_CYAN, COLOR_CYAN, COLOR_BLACK);
-  init_pair(COLOR_BLUE, COLOR_BLUE, COLOR_BLACK);
-  init_pair(COLOR_YELLOW, COLOR_YELLOW, COLOR_BLACK);
-  init_pair(COLOR_WHITE, COLOR_WHITE, COLOR_BLACK);
-  init_pair(COLOR_BLACK, COLOR_WHITE, COLOR_BLACK);
-  init_pair(COLOR_GREEN, COLOR_GREEN, COLOR_BLACK);
-  init_pair(COLOR_MAGENTA, COLOR_MAGENTA, COLOR_BLACK);
-}
-
-void invalid_move() {
-  attron(COLOR_PAIR(COLOR_RED));
-  mvprintw(0, 0, "Cannot move to that location!");
-  attroff(COLOR_PAIR(COLOR_RED));
-}
-
-void invalid_key() {
-  attron(COLOR_PAIR(COLOR_RED));
-  mvprintw(0, 0, "Invalid key.                 ");
-  attroff(COLOR_PAIR(COLOR_RED));
-}
-
-void render_dungeon(dungeon *d, character *pc, int fog) {
-  int x, y, i;
-
-  clear();
-
-  for (y = 0; y < DUNGEON_Y; y++) {
-    for (x = 0; x < DUNGEON_X; x++) {
-      if (fog) {
-        if (d->character_map[y][x] && y >= pc->y - PC_RADIUS &&
-            y <= pc->y + PC_RADIUS && x >= pc->x - PC_RADIUS &&
-            x <= pc->x + PC_RADIUS) {
-
-          i = determine_color(d->character_map[y][x]->color);
-
-          attron(COLOR_PAIR(i));
-          mvaddch(y + 1, x, d->character_map[y][x]->symbol);
-          attroff(COLOR_PAIR(i));
-
-        } else if (d->item_map[y][x] && y >= pc->y - PC_RADIUS &&
-                   y <= pc->y + PC_RADIUS && x >= pc->x - PC_RADIUS &&
-                   x <= pc->x + PC_RADIUS) {
-
-          i = determine_color(d->item_map[y][x]->color);
-
-          attron(COLOR_PAIR(i));
-          mvaddch(y + 1, x, symbol[item_symbol(d->item_map[y][x])]);
-          attroff(COLOR_PAIR(i));
-
-        } else if (y >= pc->y - PC_RADIUS &&
-            y <= pc->y + PC_RADIUS && x >= pc->x - PC_RADIUS &&
-            x <= pc->x + PC_RADIUS) {
-          attron(A_BOLD);
-          mvaddch(y + 1, x, d->pc_map[y][x]);
-          attroff(A_BOLD);
-        } else {
-          mvaddch(y + 1, x, d->pc_map[y][x]);
-        }
-
-      } else {
-        if (d->character_map[y][x]) {
-          i = determine_color(d->character_map[y][x]->color);
-
-          attron(COLOR_PAIR(i));
-          mvaddch(y + 1, x, d->character_map[y][x]->symbol);
-          attroff(COLOR_PAIR(i));
-        } else if (d->item_map[y][x]) {
-          i = determine_color(d->item_map[y][x]->color);
-
-          attron(COLOR_PAIR(i));
-          mvaddch(y + 1, x, symbol[item_symbol(d->item_map[y][x])]);
-          attroff(COLOR_PAIR(i));
-
-        } else {
-          mvaddch(y + 1, x, d->terrain_map[y][x]);
-        }
-      }
-    }
-  }
-
-  mvprintw(DISPLAY_MAX_Y, DISPLAY_MAX_X - 25, "HP: %d   Speed: %d", pc->hp, pc->get_speed());
-
-  refresh();
-}
-
-void display_tunneling_map(dungeon *d) {
-  int x, y, c;
-
-  do {
-    clear();
-    for (y = 0; y < DUNGEON_Y; y++) {
-      for (x = 0; x < DUNGEON_X; x++) {
-        mvprintw(y + 1, x, "%d", d->cost_t_map[y][x] % 10);
-      }
-    }
-    refresh();
-  } while ((c = getch()) != 27);
-}
-
-void display_non_tunneling_map(dungeon *d) {
-  int x, y, c;
-
-  do {
-    clear();
-    for (y = 0; y < DUNGEON_Y; y++) {
-      for (x = 0; x < DUNGEON_X; x++) {
-        if (d->cost_nt_map[y][x] == INT_MAX) {
-          mvaddch(y + 1, x, ' ');
-
-        } else {
-          mvprintw(y + 1, x, "%d", d->cost_nt_map[y][x] % 10);
-        }
-      }
-    }
-    refresh();
-  } while ((c = getch()) != 27);
-}
-
-void display_default_map(dungeon *d) {
-  int x, y, c;
-
-  do {
-    clear();
-    for (y = 0; y < DUNGEON_Y; y++) {
-      for (x = 0; x < DUNGEON_X; x++) {
-        mvaddch(y + 1, x, d->terrain_map[y][x]);
-      }
-    }
-    refresh();
-  } while ((c = getch()) != 27);
-}
-
-void game_over(int result) {
-  clear();
-
-  if (result == LOSE)
-    mvprintw(0, 10, gg);
-  else if (result == WIN)
-    mvprintw(0, 10, victory);
-  else {
-    mvprintw(10, 20, quitter);
-  }
-
-  refresh();
-  getch();
-  endwin();
-  exit(0);
 }

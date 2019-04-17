@@ -21,8 +21,6 @@ int32_t monster_cmp(const void *key, const void *with) {
 int main(void) {
   srand(time(NULL));
 
-  vector<character_desc> mv;
-  vector<item_desc> iv;
   int fog = 0, move;
   character *pc;
   dungeon *d;
@@ -31,9 +29,7 @@ int main(void) {
 
   move = 0;
   pc = new character;
-  d = new dungeon(pc, INT_MAX, 10, save);
-
-  parse(&mv, &iv);
+  d = new dungeon(pc, 10000, 10, save);
 
   heap_init(&mh, monster_cmp, NULL);
 
@@ -42,8 +38,10 @@ int main(void) {
 new_dung:
   heap_insert(&mh, pc);
 
-  generate_monsters(d, &mh, &mv);
-  generate_items(d, &iv);
+  parse(&d->mv, &d->iv);
+
+  generate_monsters(d, &mh, &d->mv);
+  generate_items(d, &d->iv);
 
   render_dungeon(d, pc, fog);
 
@@ -57,7 +55,7 @@ new_dung:
       render_dungeon(d, pc, fog);
 
       while (move == MOVE_INVALID || move >= INVALID_KEY) {
-        move = move_pc(d, mon, &mh, &iv, fog);
+        move = move_pc(d, mon, &mh, &d->iv, fog);
         d->update_pc_map(mon->x, mon->y);
 
         /*if (move == MOVE_INVALID) {

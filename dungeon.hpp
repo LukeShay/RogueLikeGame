@@ -6,6 +6,7 @@
 #include "item.hpp"
 #include "priority_queue.hpp"
 #include <cstdint>
+#include <vector>
 
 #define DUNGEON_X 80
 #define DUNGEON_Y 21
@@ -51,6 +52,8 @@ public:
   char pc_map[DUNGEON_Y][DUNGEON_X];
   int cost_t_map[DUNGEON_Y][DUNGEON_X];
   int cost_nt_map[DUNGEON_Y][DUNGEON_X];
+  std::vector<item_desc> iv;
+  std::vector<character_desc> mv;
 
   dungeon(character *pc_char, int num_lives, int num_mon, action_t action);
   ~dungeon();

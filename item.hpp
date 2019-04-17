@@ -14,7 +14,7 @@ public:
   std::string type;
   std::string color;
   int hit_bonus;
-  int damage_bonus;
+  dice damage_bonus;
   int dodge_bonus;
   int defense_bonus;
   int weight;

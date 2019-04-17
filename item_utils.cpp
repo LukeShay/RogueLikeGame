@@ -24,7 +24,7 @@ not_enough_items:
       i->desc = it->desc;
       i->type = it->type;
       i->hit_bonus = it->hit_bonus.roll_dice();
-      i->damage_bonus = it->damage_bonus.roll_dice();
+      i->damage_bonus.parse_dice(it->damage_bonus.form);
       i->dodge_bonus = it->dodge_bonus.roll_dice();
       i->defense_bonus = it->defense_bonus.roll_dice();
       i->weight = it->weight.roll_dice();
