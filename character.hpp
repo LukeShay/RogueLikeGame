@@ -42,6 +42,7 @@ public:
   void pick_location(character *character_map[DUNGEON_Y][DUNGEON_X],
                      uint8_t hardness_map[DUNGEON_Y][DUNGEON_X]);
   int get_speed();
+  int get_damage();
 };
 
 class character_desc {

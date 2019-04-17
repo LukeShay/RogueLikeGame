@@ -264,19 +264,11 @@ int item_symbol(item *i) {
 }
 
 int valid_move(dungeon *d, uint8_t x, uint8_t y, character *pc) {
-  int temp_ad = pc->ad.roll_dice();
-
   if (d->hardness_map[y][x] != 0)
     return MOVE_INVALID;
 
   if (d->character_map[y][x]) {
-    for (int i = 0; i < 12; i++) {
-      if (pc->equiped[i]) {
-        temp_ad += pc->equiped[i]->damage_bonus.roll_dice();
-      }
-    }
-
-    d->character_map[y][x]->hp -= temp_ad;
+    d->character_map[y][x]->hp -= pc->get_damage();
 
     if (d->character_map[y][x]->hp <= 0) {
       if(has_characteristic(d->character_map[y][x]->abilities, BOSS)) {
@@ -1027,7 +1019,7 @@ void render_dungeon(dungeon *d, character *pc, int fog) {
     }
   }
 
-  mvprintw(DISPLAY_MAX_Y, DISPLAY_MAX_X - 25, "HP: %d   Speed: %d", pc->hp, pc->get_speed());
+  mvprintw(DISPLAY_MAX_Y, DISPLAY_MAX_X - 40, "HP: %d   Speed: %d   AD: %d", pc->hp, pc->get_speed(), pc->get_damage());
 
   refresh();
 }

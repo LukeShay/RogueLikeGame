@@ -58,15 +58,7 @@ new_dung:
         move = move_pc(d, mon, &mh, &d->iv, fog);
         d->update_pc_map(mon->x, mon->y);
 
-        /*if (move == MOVE_INVALID) {
-          render_dungeon(d, pc, fog);
-          invalid_move();
-
-        } else if (move == INVALID_KEY) {
-          render_dungeon(d, pc, fog);
-          invalid_key();
-
-        } else*/ if (move == MOVE_STAIR) {
+        if (move == MOVE_STAIR) {
 
           heap_reset(&mh);
 
@@ -95,11 +87,7 @@ new_dung:
       move_monster(d, mon, pc);
     }
     
-    if (has_characteristic(mon->abilities, PC)) {
-      mon->p += 1000 / mon->get_speed();
-    } else {
-      mon->p += 1000 / mon->speed;
-    }
+    mon->p += 1000 / mon->get_speed();
 
     if (mon->hp > 0) {
       heap_insert(&mh, mon);

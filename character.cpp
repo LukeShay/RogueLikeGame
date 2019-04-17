@@ -3,7 +3,20 @@
 #include <cstdlib>
 #include <iostream>
 
-character::character() {}
+character::character() {
+  int i;
+
+  for (i = 0; i < 12; i++) {
+    if (equiped[i]) {
+      equiped[i] = NULL;
+    }
+
+    if (i < 10 && inventory[i]) {
+      inventory[i] = NULL;
+    } 
+  }
+}
+
 character::~character() {
   int i;
 
@@ -81,4 +94,16 @@ int character::get_speed() {
   }
 
   return ret_speed < speed ? speed : ret_speed;
+}
+
+int character::get_damage() {
+  int i, ret_damage = ad.roll_dice();
+
+  for (i = 0; i < 12; i++) {
+    if (equiped[i]) {
+      ret_damage += equiped[i]->damage_bonus.roll_dice(); 
+    }
+  }
+
+  return ret_damage < 0 ? ad.roll_dice() : ret_damage;
 }

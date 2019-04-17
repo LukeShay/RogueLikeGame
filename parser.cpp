@@ -43,7 +43,7 @@ void parse_monsters(std::vector<character_desc> *mv) {
   strcat(path, MONSTER_FILE_PATH);
 
   std::ifstream f(path);
-
+  
   free(path);
 
   std::string str;
@@ -117,6 +117,7 @@ void parse_monsters(std::vector<character_desc> *mv) {
   }
   mv->shrink_to_fit();
   f.close();
+  
 }
 
 void parse_items(std::vector<item_desc> *iv) {
@@ -129,7 +130,7 @@ void parse_items(std::vector<item_desc> *iv) {
   strcat(path, ITEM_FILE_PATH);
 
   std::ifstream f(path);
-
+  
   free(path);
 
   std::string str;
@@ -231,6 +232,8 @@ void parse_items(std::vector<item_desc> *iv) {
 
         getline(f, str);
         object = 1;
+        obj.placed = 0;
+        obj.destroyed = 0;
 
         iv->push_back(obj);
       }
@@ -238,6 +241,7 @@ void parse_items(std::vector<item_desc> *iv) {
   }
   iv->shrink_to_fit();
   f.close();
+  
 }
 
 void parse(std::vector<character_desc> *mv, std::vector<item_desc> *iv) {

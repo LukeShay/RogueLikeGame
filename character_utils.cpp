@@ -58,7 +58,7 @@ static void move_to_new_location(character *npc, dungeon *d, int temp_x,
   if (d->character_map[temp_y][temp_x] &&
       has_characteristic(d->character_map[temp_y][temp_x]->abilities, PC)) {
 
-    d->character_map[temp_y][temp_x]->hp -= npc->ad.roll_dice();
+    d->character_map[temp_y][temp_x]->hp -= npc->get_damage();
     d->character_map[npc->y][npc->x] = npc;
 
   } else if (d->character_map[temp_y][temp_x]) {
