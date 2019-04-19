@@ -1,10 +1,30 @@
-150b65d 2019-04-10 | Made unique monsters only spawn once even when changing floors.
-cf4489d 2019-04-10 | Fixed bug when taking stairs.
-93fe679 2019-04-10 | Finished updating dungeon rendering. Seg fault occur when taking stairs.
-d9b2815 2019-04-09 | Finished generation of monsters and items.
-27b9529 2019-04-09 | Created monster and item generator. Having issues with the items not storing the symbol.
-3c80da0 2019-04-08 | Created item parser. Created item class. Retooled dungeon into an object. Created a function to roll dice.
-78b424f 2019-04-03 | Finished fixing bugs in the monster parser.
-5a7d0be 2019-04-02 | Finished basics of the monster parser. Need to workout bugs.
-15a1b73 2019-04-02 | Created dice and new npc class.
-dd24e92 2019-04-01 | Initial commit
+2019-04-17 | Dungeon constructor now initializes item and character maps to NULL.
+2019-04-17 | Fixed seg fault due to item arrays in character not being initialized as NULL.
+2019-04-17 | Monsters now actually pick up items and destroy them.
+2019-04-17 | Fixed seg fault when calculating priority.
+2019-04-17 | get_speed is still causing a seg fault when calculating priority.
+2019-04-16 | get_speed() method of character is causing the seg fault.
+2019-04-16 | Random seg fault occuring when first move is invalid.
+2019-04-16 | Implemented speed bonus from items.
+2019-04-16 | Implemented the pass characteristic for monsters.
+2019-04-15 | Updated fog to bold the area the pc can see.
+2019-04-15 | Updated pc combat to work as specified.
+2019-04-15 | Updated monster combat.
+2019-04-15 | Started implementing destroying items but causes seg fault.
+2019-04-15 | Implemented function to drop items. If there is an item already there, the item being drop is removed.
+2019-04-15 | Implemented looking at monsters.
+2019-04-14 | Implemented function to take off items.
+2019-04-14 | Implemented swapping items.
+2019-04-14 | Implemented inspecting items.
+2019-04-13 | PC can now pickup items and see inventory and equiped.
+2019-04-11 | Reduced memory leaks.
+2019-04-11 | Retooled makefile.
+2019-04-10 | Made unique monsters only spawn once even when changing floors.
+2019-04-10 | Fixed bug when taking stairs.
+2019-04-10 | Finished updating dungeon rendering. Seg fault occur when taking stairs.
+2019-04-09 | Finished generation of monsters and items.
+2019-04-09 | Created monster and item generator. Having issues with the items not storing the symbol.
+2019-04-08 | Created item parser. Created item class. Retooled dungeon into an object. Created a function to roll dice.
+2019-04-03 | Finished fixing bugs in the monster parser.
+2019-04-02 | Finshed basics of the monster parser. Need to workout bugs.
+2019-04-02 | Created dice and new npc class.

@@ -116,24 +116,51 @@ int determine_color(std::string color) {
   }
 }
 
-void render_pc_inventory(character *pc) {
-  int print_start = 26, i;
-  char c;
-  clear();
+void render_pc_inventory_helper(character *pc, int x_start_point,
+                                int y_start_point) {
+  int i;
 
-  mvprintw(0, print_start + 2, "***************");
-  mvprintw(1, print_start + 2, "** Inventory **");
-  mvprintw(2, print_start + 2, "***************");
+  mvprintw(y_start_point, x_start_point + 3, "***************");
+  mvprintw(y_start_point + 1, x_start_point + 3, "** Inventory **");
+  mvprintw(y_start_point + 2, x_start_point + 3, "***************");
 
   for (i = 0; i < sizeof(pc->inventory) / sizeof(pc->inventory[0]); i++) {
 
     if (pc->inventory[i]) {
-      mvprintw(4 + i, print_start, "%d) %s", i, pc->inventory[i]->name.c_str());
+      mvprintw(y_start_point + 4 + i, x_start_point, "%d) %s", i,
+               pc->inventory[i]->name.c_str());
 
     } else {
-      mvprintw(4 + i, print_start, "%d)", i);
+      mvprintw(y_start_point + 4 + i, x_start_point, "%d)", i);
     }
   }
+}
+
+void render_pc_equipment_helper(character *pc, int x_start_point,
+                                int y_start_point) {
+  int i;
+  mvprintw(y_start_point, x_start_point + 3, "***************");
+  mvprintw(y_start_point + 1, x_start_point + 3, "** Equipment **");
+  mvprintw(y_start_point + 2, x_start_point + 3, "***************");
+
+  for (i = 0; i < sizeof(pc->equiped) / sizeof(pc->equiped[0]); i++) {
+
+    if (pc->equiped[i]) {
+      mvprintw(y_start_point + 4 + i, x_start_point, "%c) %s",
+               equiped_item_symbol[i], pc->equiped[i]->name.c_str());
+
+    } else {
+      mvprintw(y_start_point + 4 + i, x_start_point, "%c)",
+               equiped_item_symbol[i]);
+    }
+  }
+}
+
+void render_pc_inventory(character *pc) {
+  char c;
+  clear();
+
+  render_pc_inventory_helper(pc, 30, 0);
 
   attron(COLOR_PAIR(COLOR_RED));
   mvprintw(DISPLAY_MAX_Y, 0, "Use ESC key to exit");
@@ -146,24 +173,10 @@ void render_pc_inventory(character *pc) {
 }
 
 void render_pc_equipment(character *pc) {
-  int print_start = 26, i;
   char c;
   clear();
 
-  mvprintw(0, print_start + 2, "***************");
-  mvprintw(1, print_start + 2, "** Equipment **");
-  mvprintw(2, print_start + 2, "***************");
-
-  for (i = 0; i < sizeof(pc->equiped) / sizeof(pc->equiped[0]); i++) {
-
-    if (pc->equiped[i]) {
-      mvprintw(4 + i, print_start, "%c) %s", equiped_item_symbol[i],
-               pc->equiped[i]->name.c_str());
-
-    } else {
-      mvprintw(4 + i, print_start, "%c)", equiped_item_symbol[i]);
-    }
-  }
+  render_pc_equipment_helper(pc, 30, 0);
 
   attron(COLOR_PAIR(COLOR_RED));
   mvprintw(DISPLAY_MAX_Y, 0, "Use ESC key to exit");
@@ -172,48 +185,6 @@ void render_pc_equipment(character *pc) {
   refresh();
 
   while ((c = getch()) != 27) {
-  }
-}
-
-void pickup_item(dungeon *d, character *pc) {
-  int equiped_slot, inventory_slot;
-
-  if (d->item_map[pc->y][pc->x]) {
-    equiped_slot = item_slot(d->item_map[pc->y][pc->x]->type);
-    inventory_slot = empty_inventory_slot(pc->inventory);
-
-    if (!pc->equiped[equiped_slot]) {
-      pc->equiped[equiped_slot] = d->item_map[pc->y][pc->x];
-      d->item_map[pc->y][pc->x] = NULL;
-
-      attron(COLOR_PAIR(COLOR_RED));
-      mvprintw(0, 0, "Item put in slot: %c", equiped_item_symbol[equiped_slot]);
-      attroff(COLOR_PAIR(COLOR_RED));
-
-    } else if (equiped_slot == ring_1 && !pc->equiped[ring_2]) {
-      pc->equiped[ring_2] = d->item_map[pc->y][pc->x];
-      d->item_map[pc->y][pc->x] = NULL;
-
-      attron(COLOR_PAIR(COLOR_RED));
-      mvprintw(0, 0, "Item put in slot: %c", equiped_item_symbol[ring_2]);
-      attroff(COLOR_PAIR(COLOR_RED));
-
-    } else if (inventory_slot < 10) {
-      pc->inventory[inventory_slot] = d->item_map[pc->y][pc->x];
-      d->item_map[pc->y][pc->x] = NULL;
-
-      attron(COLOR_PAIR(COLOR_RED));
-      mvprintw(0, 0, "Item put in slot: %d", inventory_slot);
-      attroff(COLOR_PAIR(COLOR_RED));
-    } else {
-      attron(COLOR_PAIR(COLOR_RED));
-      mvprintw(0, 0, "Inventory is full!           ");
-      attroff(COLOR_PAIR(COLOR_RED));
-    }
-  } else {
-    attron(COLOR_PAIR(COLOR_RED));
-    mvprintw(0, 0, "No item on floor!            ");
-    attroff(COLOR_PAIR(COLOR_RED));
   }
 }
 
@@ -271,7 +242,7 @@ int valid_move(dungeon *d, uint8_t x, uint8_t y, character *pc) {
     d->character_map[y][x]->hp -= pc->get_damage();
 
     if (d->character_map[y][x]->hp <= 0) {
-      if(has_characteristic(d->character_map[y][x]->abilities, BOSS)) {
+      if (has_characteristic(d->character_map[y][x]->abilities, BOSS)) {
         game_over(WIN);
       }
 
@@ -296,6 +267,48 @@ int valid_stair(dungeon *d, character *pc, char s) {
     return MOVE_STAIR;
   else
     return MOVE_INVALID;
+}
+
+void pickup_item(dungeon *d, character *pc) {
+  int equiped_slot, inventory_slot;
+
+  if (d->item_map[pc->y][pc->x]) {
+    equiped_slot = item_slot(d->item_map[pc->y][pc->x]->type);
+    inventory_slot = empty_inventory_slot(pc->inventory);
+
+    if (!pc->equiped[equiped_slot]) {
+      pc->equiped[equiped_slot] = d->item_map[pc->y][pc->x];
+      d->item_map[pc->y][pc->x] = NULL;
+
+      attron(COLOR_PAIR(COLOR_RED));
+      mvprintw(0, 0, "Item put in slot: %c", equiped_item_symbol[equiped_slot]);
+      attroff(COLOR_PAIR(COLOR_RED));
+
+    } else if (equiped_slot == ring_1 && !pc->equiped[ring_2]) {
+      pc->equiped[ring_2] = d->item_map[pc->y][pc->x];
+      d->item_map[pc->y][pc->x] = NULL;
+
+      attron(COLOR_PAIR(COLOR_RED));
+      mvprintw(0, 0, "Item put in slot: %c", equiped_item_symbol[ring_2]);
+      attroff(COLOR_PAIR(COLOR_RED));
+
+    } else if (inventory_slot < 10) {
+      pc->inventory[inventory_slot] = d->item_map[pc->y][pc->x];
+      d->item_map[pc->y][pc->x] = NULL;
+
+      attron(COLOR_PAIR(COLOR_RED));
+      mvprintw(0, 0, "Item put in slot: %d", inventory_slot);
+      attroff(COLOR_PAIR(COLOR_RED));
+    } else {
+      attron(COLOR_PAIR(COLOR_RED));
+      mvprintw(0, 0, "Inventory is full!           ");
+      attroff(COLOR_PAIR(COLOR_RED));
+    }
+  } else {
+    attron(COLOR_PAIR(COLOR_RED));
+    mvprintw(0, 0, "No item on floor!            ");
+    attroff(COLOR_PAIR(COLOR_RED));
+  }
 }
 
 int list_monsters(dungeon *d, character *pc) {
@@ -330,7 +343,7 @@ int list_monsters(dungeon *d, character *pc) {
           if (num >= num_initial) {
             num_on_screen++;
             k++;
-            
+
             attron(COLOR_PAIR(determine_color(d->character_map[i][j]->color)));
             mvprintw(k, print_start, "%c", d->character_map[i][j]->symbol);
             attroff(COLOR_PAIR(determine_color(d->character_map[i][j]->color)));
@@ -362,146 +375,6 @@ int list_monsters(dungeon *d, character *pc) {
   } while (((c = getch()) != 27));
 
   return 0;
-}
-
-void render_dungeon_teleport(dungeon *d, character *pc, int fog) {
-  int x, y, i;
-
-  clear();
-
-  for (y = 0; y < DUNGEON_Y; y++) {
-    for (x = 0; x < DUNGEON_X; x++) {
-          
-      if(x == pc->x && y == pc->y){
-        i = COLOR_CYAN;
-
-        attron(COLOR_PAIR(i));
-        mvaddch(y + 1, x, '@');
-        attroff(COLOR_PAIR(i));
-      }
-      else {
-        if (d->character_map[y][x] && d->character_map[y][x] != pc) {
-          i = determine_color(d->character_map[y][x]->color);
-
-          attron(COLOR_PAIR(i));
-          mvaddch(y + 1, x, d->character_map[y][x]->symbol);
-          attroff(COLOR_PAIR(i));
-        } else if (d->item_map[y][x]) {
-          i = determine_color(d->item_map[y][x]->color);
-
-          attron(COLOR_PAIR(i));
-          mvaddch(y + 1, x, symbol[item_symbol(d->item_map[y][x])]);
-          attroff(COLOR_PAIR(i));
-        } else {
-          mvaddch(y + 1, x, d->terrain_map[y][x]);
-        }
-      }
-    }
-  }
-
-  mvprintw(DISPLAY_MAX_Y, DISPLAY_MAX_X - 25, "HP: %d   Speed: %d", pc->hp, pc->get_speed());
-
-  refresh();
-}
-
-void teleport_pc(dungeon *d, character *pc, int fog) {
-  int c;
-  int new_x, new_y;
-
-  d->character_map[pc->y][pc->x] = NULL;
-
-  render_dungeon_teleport(d, pc, 0);
-  attron(COLOR_PAIR(COLOR_RED));
-  mvprintw(0, 0, "Teleporting                  ");
-  attroff(COLOR_PAIR(COLOR_RED));
-
-  while ((c = getch()) != 'g') {
-    switch (c) {
-    case 'y':
-    case '7':
-    case KEY_HOME:
-      new_x = pc->x - 1;
-      new_y = pc->y - 1;
-      goto move;
-
-    case 'k':
-    case '8':
-    case KEY_UP:
-      new_x = pc->x;
-      new_y = pc->y - 1;
-      goto move;
-
-    case 'u':
-    case '9':
-    case KEY_PPAGE:
-      new_x = pc->x + 1;
-      new_y = pc->y - 1;
-      goto move;
-
-    case 'l':
-    case '6':
-    case KEY_RIGHT:
-      new_x = pc->x + 1;
-      new_y = pc->y;
-      goto move;
-
-    case 'n':
-    case '3':
-    case KEY_NPAGE:
-      new_x = pc->x + 1;
-      new_y = pc->y + 1;
-      goto move;
-
-    case 'j':
-    case '2':
-    case KEY_DOWN:
-      new_x = pc->x;
-      new_y = pc->y + 1;
-      goto move;
-
-    case 'b':
-    case '1':
-    case KEY_END:
-      new_x = pc->x - 1;
-      new_y = pc->y + 1;
-      goto move;
-
-    case 'h':
-    case '4':
-    case KEY_LEFT:
-      new_x = pc->x - 1;
-      new_y = pc->y;
-      goto move;
-
-    case 'r':
-      new_x = rand() % 77 + 1;
-      new_y = rand() % 18 + 1;
-      goto move;
-    }
-  move:
-    if (new_y < 20 && new_y > 0 && new_x < 79 && new_x > 0) {
-
-      pc->y = new_y;
-      pc->x = new_x;
-
-      if (c == 'r')
-        goto done;
-    }
-    render_dungeon_teleport(d, pc, 0);
-    attron(COLOR_PAIR(COLOR_RED));
-    mvprintw(0, 0, "Teleporting                  ");
-    attroff(COLOR_PAIR(COLOR_RED));
-  }
-
-done:
-
-  if (d->character_map[pc->y][pc->x]) {
-    d->character_map[pc->y][pc->x]->hp = 0;
-  }
-
-  d->character_map[pc->y][pc->x] = pc;
-
-  render_dungeon(d, pc, fog);
 }
 
 void display_item(character *pc, int equiped, int item_slot) {
@@ -648,49 +521,14 @@ void swap_slot(character *pc, int slot) {
 }
 
 void display_all_items(character *pc) {
-  int print_start = 14, i;
-
-  mvprintw(1, print_start + 2, "***************");
-  mvprintw(2, print_start + 2, "** Inventory **");
-  mvprintw(3, print_start + 2, "***************");
-
-  for (i = 0; i < sizeof(pc->inventory) / sizeof(pc->inventory[0]); i++) {
-    if (pc->inventory[i]) {
-      mvprintw(4 + i, print_start, "%d) %s", i, pc->inventory[i]->name.c_str());
-
-    } else {
-      mvprintw(4 + i, print_start, "%d)", i);
-    }
-  }
-
-  mvprintw(1, print_start + 30, "***************");
-  mvprintw(2, print_start + 30, "** Equipment **");
-  mvprintw(3, print_start + 30, "***************");
-
-  for (i = 0; i < sizeof(pc->equiped) / sizeof(pc->equiped[0]); i++) {
-    if (pc->equiped[i]) {
-      mvprintw(4 + i, print_start + 28, "%c) %s", equiped_item_symbol[i],
-               pc->equiped[i]->name.c_str());
-
-    } else {
-      mvprintw(4 + i, print_start + 28, "%c)", equiped_item_symbol[i]);
-    }
-  }
+  render_pc_inventory_helper(pc, 14, 1);
+  render_pc_equipment_helper(pc, 42, 1);
 }
 
 void wear_item(character *pc) {
-  int c, equiped_slot;
+  int c, equiped_slot, first_time_looping = 1;
 
-  clear();
-  display_all_items(pc);
-
-  attron(COLOR_PAIR(COLOR_RED));
-  mvprintw(DISPLAY_MAX_Y - 1, 0, "Enter inventory slot");
-  mvprintw(DISPLAY_MAX_Y, 0, "Use ESC key to exit");
-  attroff(COLOR_PAIR(COLOR_RED));
-  refresh();
-
-  while ((c = getch()) != 27) {
+  do {
     clear();
 
     attron(COLOR_PAIR(COLOR_RED));
@@ -698,23 +536,28 @@ void wear_item(character *pc) {
     mvprintw(DISPLAY_MAX_Y, 0, "Use ESC key to exit");
     attroff(COLOR_PAIR(COLOR_RED));
 
-    if (c >= '0' && c <= '9') {
-      equiped_slot = c - '0';
-      swap_slot(pc, equiped_slot);
+    if (!first_time_looping) {
+      if (c >= '0' && c <= '9') {
+        equiped_slot = c - '0';
+        swap_slot(pc, equiped_slot);
 
-      attron(COLOR_PAIR(COLOR_RED));
-      mvprintw(0, 0, "Now wearing item from %d", equiped_slot);
-      attroff(COLOR_PAIR(COLOR_RED));
+        attron(COLOR_PAIR(COLOR_RED));
+        mvprintw(0, 0, "Now wearing item from %d", equiped_slot);
+        attroff(COLOR_PAIR(COLOR_RED));
 
+      } else {
+        attron(COLOR_PAIR(COLOR_RED));
+        mvprintw(0, 0, "Not an inventory slot.");
+        attroff(COLOR_PAIR(COLOR_RED));
+      }
     } else {
-      attron(COLOR_PAIR(COLOR_RED));
-      mvprintw(0, 0, "Not an inventory slot.");
-      attroff(COLOR_PAIR(COLOR_RED));
+      first_time_looping = 0;
     }
 
     display_all_items(pc);
     refresh();
-  }
+
+  } while ((c = getch()) != 27);
 }
 
 void take_off_item(dungeon *d, character *pc) {
@@ -790,7 +633,8 @@ void display_monster(character *c) {
     clear();
 
     mvprintw(0, 0, "%s", c->desc.c_str());
-    mvprintw(DISPLAY_MAX_Y - 3, 0, "Speed: %d   Hitpoints: %d   AD: %s", c->get_speed(), c->hp, c->ad.form.c_str());
+    mvprintw(DISPLAY_MAX_Y - 3, 0, "Speed: %d   Hitpoints: %d   AD: %s",
+             c->get_speed(), c->hp, c->ad.form.c_str());
 
     refresh();
   } else {
@@ -905,7 +749,6 @@ void drop_item_helper(dungeon *d, character *pc, int slot) {
 }
 
 void drop_item(dungeon *d, character *pc) {
-  int print_start = 26, i;
   int c = INT_MAX;
 
   do {
@@ -917,20 +760,7 @@ void drop_item(dungeon *d, character *pc) {
     }
     attroff(COLOR_PAIR(COLOR_RED));
 
-    mvprintw(0, print_start + 2, "***************");
-    mvprintw(1, print_start + 2, "** Inventory **");
-    mvprintw(2, print_start + 2, "***************");
-
-    for (i = 0; i < sizeof(pc->inventory) / sizeof(pc->inventory[0]); i++) {
-
-      if (pc->inventory[i]) {
-        mvprintw(4 + i, print_start, "%d) %s", i,
-                 pc->inventory[i]->name.c_str());
-
-      } else {
-        mvprintw(4 + i, print_start, "%d)", i);
-      }
-    }
+    render_pc_inventory_helper(pc, 26, 1);
 
     attron(COLOR_PAIR(COLOR_RED));
     mvprintw(DISPLAY_MAX_Y - 1, 0, "Enter an inventory slot");
@@ -958,6 +788,143 @@ void io_init_terminal() {
   init_pair(COLOR_BLACK, COLOR_WHITE, COLOR_BLACK);
   init_pair(COLOR_GREEN, COLOR_GREEN, COLOR_BLACK);
   init_pair(COLOR_MAGENTA, COLOR_MAGENTA, COLOR_BLACK);
+}
+
+void render_dungeon_teleport(dungeon *d, character *pc, int fog) {
+  int x, y, i;
+
+  clear();
+
+  for (y = 0; y < DUNGEON_Y; y++) {
+    for (x = 0; x < DUNGEON_X; x++) {
+
+      if (x == pc->x && y == pc->y) {
+        i = COLOR_CYAN;
+
+        attron(COLOR_PAIR(i));
+        mvaddch(y + 1, x, '@');
+        attroff(COLOR_PAIR(i));
+      } else {
+        if (d->character_map[y][x] && d->character_map[y][x] != pc) {
+          i = determine_color(d->character_map[y][x]->color);
+
+          attron(COLOR_PAIR(i));
+          mvaddch(y + 1, x, d->character_map[y][x]->symbol);
+          attroff(COLOR_PAIR(i));
+        } else if (d->item_map[y][x]) {
+          i = determine_color(d->item_map[y][x]->color);
+
+          attron(COLOR_PAIR(i));
+          mvaddch(y + 1, x, symbol[item_symbol(d->item_map[y][x])]);
+          attroff(COLOR_PAIR(i));
+        } else {
+          mvaddch(y + 1, x, d->terrain_map[y][x]);
+        }
+      }
+    }
+  }
+
+  refresh();
+}
+
+void teleport_pc(dungeon *d, character *pc, int fog) {
+  int c;
+  int new_x, new_y;
+
+  d->character_map[pc->y][pc->x] = NULL;
+
+  render_dungeon_teleport(d, pc, 0);
+  attron(COLOR_PAIR(COLOR_RED));
+  mvprintw(0, 0, "Teleporting                  ");
+  attroff(COLOR_PAIR(COLOR_RED));
+
+  while ((c = getch()) != 'g') {
+    switch (c) {
+    case 'y':
+    case '7':
+    case KEY_HOME:
+      new_x = pc->x - 1;
+      new_y = pc->y - 1;
+      goto move;
+
+    case 'k':
+    case '8':
+    case KEY_UP:
+      new_x = pc->x;
+      new_y = pc->y - 1;
+      goto move;
+
+    case 'u':
+    case '9':
+    case KEY_PPAGE:
+      new_x = pc->x + 1;
+      new_y = pc->y - 1;
+      goto move;
+
+    case 'l':
+    case '6':
+    case KEY_RIGHT:
+      new_x = pc->x + 1;
+      new_y = pc->y;
+      goto move;
+
+    case 'n':
+    case '3':
+    case KEY_NPAGE:
+      new_x = pc->x + 1;
+      new_y = pc->y + 1;
+      goto move;
+
+    case 'j':
+    case '2':
+    case KEY_DOWN:
+      new_x = pc->x;
+      new_y = pc->y + 1;
+      goto move;
+
+    case 'b':
+    case '1':
+    case KEY_END:
+      new_x = pc->x - 1;
+      new_y = pc->y + 1;
+      goto move;
+
+    case 'h':
+    case '4':
+    case KEY_LEFT:
+      new_x = pc->x - 1;
+      new_y = pc->y;
+      goto move;
+
+    case 'r':
+      new_x = rand() % 77 + 1;
+      new_y = rand() % 18 + 1;
+      goto move;
+    }
+  move:
+    if (new_y < 20 && new_y > 0 && new_x < 79 && new_x > 0) {
+
+      pc->y = new_y;
+      pc->x = new_x;
+
+      if (c == 'r')
+        goto done;
+    }
+    render_dungeon_teleport(d, pc, 0);
+    attron(COLOR_PAIR(COLOR_RED));
+    mvprintw(0, 0, "Teleporting                  ");
+    attroff(COLOR_PAIR(COLOR_RED));
+  }
+
+done:
+
+  if (d->character_map[pc->y][pc->x]) {
+    d->character_map[pc->y][pc->x]->hp = 0;
+  }
+
+  d->character_map[pc->y][pc->x] = pc;
+
+  render_dungeon(d, pc, fog);
 }
 
 void render_dungeon(dungeon *d, character *pc, int fog) {
@@ -988,9 +955,8 @@ void render_dungeon(dungeon *d, character *pc, int fog) {
           mvaddch(y + 1, x, symbol[item_symbol(d->item_map[y][x])]);
           attroff(COLOR_PAIR(i));
 
-        } else if (y >= pc->y - PC_RADIUS &&
-            y <= pc->y + PC_RADIUS && x >= pc->x - PC_RADIUS &&
-            x <= pc->x + PC_RADIUS) {
+        } else if (y >= pc->y - PC_RADIUS && y <= pc->y + PC_RADIUS &&
+                   x >= pc->x - PC_RADIUS && x <= pc->x + PC_RADIUS) {
           attron(A_BOLD);
           mvaddch(y + 1, x, d->pc_map[y][x]);
           attroff(A_BOLD);
@@ -1019,7 +985,8 @@ void render_dungeon(dungeon *d, character *pc, int fog) {
     }
   }
 
-  mvprintw(DISPLAY_MAX_Y, DISPLAY_MAX_X - 40, "HP: %d   Speed: %d   AD: %d", pc->hp, pc->get_speed(), pc->get_damage());
+  mvprintw(DISPLAY_MAX_Y, DISPLAY_MAX_X - 22, "HP: %4d   Speed: %4d", pc->hp,
+           pc->get_speed());
 
   refresh();
 }

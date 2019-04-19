@@ -80,8 +80,8 @@ static void move_to_new_location(character *npc, dungeon *d, int temp_x,
 
   if (d->item_map[npc->y][npc->x]) {
     if (has_characteristic(npc->abilities, DESTROY)) {
-      for (std::vector<item_desc>::iterator it = d->iv.begin(); it < d->iv.end();
-           it++) {
+      for (std::vector<item_desc>::iterator it = d->iv.begin();
+           it < d->iv.end(); it++) {
         if (!it->name.compare(d->item_map[npc->y][npc->x]->name)) {
           it->destroyed = 1;
 
@@ -102,7 +102,7 @@ static void move_to_new_location(character *npc, dungeon *d, int temp_x,
       } else if (equiped_slot == ring_1 && !npc->equiped[ring_2]) {
         npc->equiped[ring_2] = d->item_map[npc->y][npc->x];
         d->item_map[npc->y][npc->x] = NULL;
-      
+
       } else if (inventory_slot < 10) {
         npc->inventory[inventory_slot] = d->item_map[npc->y][npc->x];
         d->item_map[npc->y][npc->x] = NULL;
@@ -354,14 +354,14 @@ static void npc_7(character *npc, dungeon *d, character *pc) {
 }
 
 static void npc_pass(character *npc, dungeon *d, character *pc) {
-  int temp_x, temp_y; 
+  int temp_x, temp_y;
 
-  switch(npc->direction) {
+  switch (npc->direction) {
   case 0:
     temp_x = npc->x;
     temp_y = npc->y - 1;
 
-    if(d->hardness_map[temp_y][temp_x] < 255) {
+    if (d->hardness_map[temp_y][temp_x] < 255) {
       d->character_map[npc->y][npc->x] = NULL;
       move_to_new_location(npc, d, temp_x, temp_y);
     } else {
@@ -369,12 +369,11 @@ static void npc_pass(character *npc, dungeon *d, character *pc) {
     }
     break;
 
-  
   case 1:
     temp_x = npc->x + 1;
     temp_y = npc->y;
 
-    if(d->hardness_map[temp_y][temp_x] < 255) {
+    if (d->hardness_map[temp_y][temp_x] < 255) {
       d->character_map[npc->y][npc->x] = NULL;
       move_to_new_location(npc, d, temp_x, temp_y);
     } else {
@@ -386,19 +385,19 @@ static void npc_pass(character *npc, dungeon *d, character *pc) {
     temp_x = npc->x;
     temp_y = npc->y + 1;
 
-    if(d->hardness_map[temp_y][temp_x] < 255) {
+    if (d->hardness_map[temp_y][temp_x] < 255) {
       d->character_map[npc->y][npc->x] = NULL;
       move_to_new_location(npc, d, temp_x, temp_y);
     } else {
       pc->direction = rand() % 4;
     }
     break;
-  
+
   case 3:
     temp_x = npc->x - 1;
     temp_y = npc->y;
 
-    if(d->hardness_map[temp_y][temp_x] < 255) {
+    if (d->hardness_map[temp_y][temp_x] < 255) {
       d->character_map[npc->y][npc->x] = NULL;
       move_to_new_location(npc, d, temp_x, temp_y);
     } else {
@@ -406,12 +405,11 @@ static void npc_pass(character *npc, dungeon *d, character *pc) {
     }
     break;
   }
-} 
-
+}
 
 static void npc_pass_smart(character *npc, dungeon *d, character *pc) {
   if (can_see_PC(npc, pc)) {
-    
+
     uint8_t x_direction = 0, y_direction = 0;
 
     if (npc->x != pc->x) {
@@ -426,12 +424,11 @@ static void npc_pass_smart(character *npc, dungeon *d, character *pc) {
 
     d->character_map[npc->y][npc->x] = NULL;
     move_to_new_location(npc, d, temp_x, temp_y);
-
-  } 
+  }
 }
 
 static void npc_pass_tele(character *npc, dungeon *d, character *pc) {
-  
+
   uint8_t x_direction = 0, y_direction = 0;
 
   if (npc->x != pc->x) {
@@ -538,11 +535,10 @@ not_enough_monsters:
 void npc_erratic(character *npc, dungeon *d, character *pc);
 
 void (*npc_move_func[])(character *npc, dungeon *d, character *pc) = {
-    npc_0,       npc_1,       npc_2,       npc_3,
-    npc_4,       npc_5,       npc_6,       npc_7,
-    npc_erratic, npc_erratic, npc_erratic, npc_erratic,
-    npc_erratic, npc_erratic, npc_erratic, npc_erratic,
-    npc_pass, npc_pass_tele};
+    npc_0,       npc_1,       npc_2,        npc_3,       npc_4,
+    npc_5,       npc_6,       npc_7,        npc_erratic, npc_erratic,
+    npc_erratic, npc_erratic, npc_erratic,  npc_erratic, npc_erratic,
+    npc_erratic, npc_pass,    npc_pass_tele};
 
 void npc_erratic(character *npc, dungeon *d, character *pc) {
   int e = rand() % 2;

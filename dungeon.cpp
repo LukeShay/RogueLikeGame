@@ -40,9 +40,13 @@ int32_t corridor_path_cmp(const void *key, const void *with) {
   return ((corridor_path_t *)key)->cost - ((corridor_path_t *)with)->cost;
 }
 
-dungeon::dungeon(character *pc_char, int num_lives, int num_mon,
-                 action_t action) {
+int32_t monster_cmp(const void *key, const void *with) {
+  return ((character *)key)->p - ((character *)with)->p;
+}
+
+dungeon::dungeon(int num_lives, int num_mon, action_t action) {
   point_t pc;
+  this->pc = new character;
 
   int x, y;
   for (y = 0; y < DUNGEON_Y; y++) {
@@ -52,20 +56,21 @@ dungeon::dungeon(character *pc_char, int num_lives, int num_mon,
     }
   }
 
-  if (action == save || action == savenummon || action == num_mon) {
+  if (action == save) {
     pc = generate_dungeon();
-  } else if (action == load || action == loadnummon) {
+  } else if (action == load) {
     pc = load_dungeon();
-  } else if (action == loadSave || action == loadSavenummon) {
+  } else if (action == loadSave) {
     pc = load_save_dungeon();
   } else {
     fprintf(stderr, "Invalid action parameter: %d", action);
     return;
   }
 
-  pc_init(pc_char, pc, num_lives);
+  pc_init(this->pc, pc, num_lives);
+  heap_init(&mh, monster_cmp, NULL);
 
-  this->character_map[pc_char->y][pc_char->x] = pc_char;
+  this->character_map[this->pc->y][this->pc->x] = this->pc;
 
   init_pc_map(pc);
   tunneling_path(this, pc.xpos, pc.ypos);
@@ -76,6 +81,7 @@ dungeon::dungeon(character *pc_char, int num_lives, int num_mon,
 
 dungeon::~dungeon() {
   int x, y;
+  delete this->pc;
   for (y = 0; y < DUNGEON_Y; y++) {
     for (x = 0; x < DUNGEON_X; x++) {
       if (item_map[y][x]) {

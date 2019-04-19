@@ -14,58 +14,49 @@
 
 using namespace std;
 
-int32_t monster_cmp(const void *key, const void *with) {
-  return ((character *)key)->p - ((character *)with)->p;
-}
-
 int main(void) {
   srand(time(NULL));
 
   int fog = 0, move;
-  character *pc;
   dungeon *d;
-  heap_t mh;
   character *mon;
 
   move = 0;
-  pc = new character;
-  d = new dungeon(pc, 10000, 10, save);
-
-  heap_init(&mh, monster_cmp, NULL);
+  d = new dungeon(10000, 10, save);
 
   io_init_terminal();
 
 new_dung:
-  heap_insert(&mh, pc);
+  heap_insert(&d->mh, d->pc);
 
   parse(&d->mv, &d->iv);
 
-  generate_monsters(d, &mh, &d->mv);
+  generate_monsters(d, &d->mh, &d->mv);
   generate_items(d, &d->iv);
 
-  render_dungeon(d, pc, fog);
+  render_dungeon(d, d->pc, fog);
 
-  while ((mon = (character *)heap_remove_min(&mh))) {
-    if (pc->hp <= 0) {
+  while ((mon = (character *)heap_remove_min(&d->mh))) {
+    if (d->pc->hp <= 0) {
       getch();
       game_over(LOSE);
       goto over;
     }
     if (has_characteristic(mon->abilities, PC)) {
-      render_dungeon(d, pc, fog);
+      render_dungeon(d, d->pc, fog);
 
       while (move == MOVE_INVALID || move >= INVALID_KEY) {
-        move = move_pc(d, mon, &mh, &d->iv, fog);
+        move = move_pc(d, mon, &d->mh, &d->iv, fog);
         d->update_pc_map(mon->x, mon->y);
 
         if (move == MOVE_STAIR) {
 
-          heap_reset(&mh);
+          heap_reset(&d->mh);
 
           d->~dungeon();
 
           move = 0;
-          d = new dungeon(pc, pc->hp, 10, save);
+          d = new dungeon(d->pc->hp, 10, save);
 
           goto new_dung;
 
@@ -76,21 +67,21 @@ new_dung:
         } else if (move == FOG_TOGGLE) {
           fog = fog == 1 ? 0 : 1;
 
-          render_dungeon(d, pc, fog);
+          render_dungeon(d, d->pc, fog);
 
         } else if (move == TELEPORT) {
-          render_dungeon(d, pc, fog);
+          render_dungeon(d, d->pc, fog);
         }
       }
 
     } else if (mon->hp > 0) {
-      move_monster(d, mon, pc);
+      move_monster(d, mon, d->pc);
     }
-    
+
     mon->p += 1000 / mon->get_speed();
 
     if (mon->hp > 0) {
-      heap_insert(&mh, mon);
+      heap_insert(&d->mh, mon);
 
     } else {
       delete mon;
@@ -98,14 +89,14 @@ new_dung:
 
     move = 0;
 
-    non_tunneling_path(d, pc->x, pc->y);
-    tunneling_path(d, pc->x, pc->y);
+    non_tunneling_path(d, d->pc->x, d->pc->y);
+    tunneling_path(d, d->pc->x, d->pc->y);
   }
 
 over:
 
   // delete pc;
-  heap_delete(&mh);
+  heap_delete(&d->mh);
   d->~dungeon();
   delete d;
 

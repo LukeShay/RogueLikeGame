@@ -36,9 +36,6 @@ typedef enum action {
   save,
   load,
   loadSave,
-  savenummon,
-  loadnummon,
-  loadSavenummon
 } action_t;
 
 typedef enum dim { dim_x, dim_y, num_dims } dim_t;
@@ -54,8 +51,10 @@ public:
   int cost_nt_map[DUNGEON_Y][DUNGEON_X];
   std::vector<item_desc> iv;
   std::vector<character_desc> mv;
+  character *pc;
+  heap_t mh;
 
-  dungeon(character *pc_char, int num_lives, int num_mon, action_t action);
+  dungeon(int num_lives, int num_mon, action_t action);
   ~dungeon();
   void update_pc_map(int px, int py);
   void clear();
