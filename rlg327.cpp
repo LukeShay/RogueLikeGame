@@ -75,7 +75,7 @@ new_dung:
       }
 
     } else if (mon->hp > 0) {
-      move_monster(d, mon, d->pc);
+      move_monster(d, mon);
     }
 
     mon->p += 1000 / mon->get_speed();

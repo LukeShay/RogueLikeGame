@@ -8,11 +8,11 @@
 
 #define MIN_NUM_MONS 10
 
-int can_see_PC(character *npc, character *pc) {
+int can_see_PC(character *npc, dungeon *d) {
   int x = 10, y = 4;
 
-  if (npc->x - x < pc->x && npc->x + x >= pc->x && npc->y - y < pc->y &&
-      npc->y + y >= pc->y)
+  if (npc->x - x < d->pc->x && npc->x + x >= d->pc->x &&
+      npc->y - y < d->pc->y && npc->y + y >= d->pc->y)
     return 1;
   else
     return 0;
@@ -111,7 +111,7 @@ static void move_to_new_location(character *npc, dungeon *d, int temp_x,
   }
 }
 
-static void npc_0(character *npc, dungeon *d, character *pc) {
+static void npc_0(character *npc, dungeon *d) {
   int temp_x = npc->x, temp_y = npc->y;
 
   d->character_map[npc->y][npc->x] = NULL;
@@ -152,29 +152,29 @@ static void npc_0(character *npc, dungeon *d, character *pc) {
   move_to_new_location(npc, d, temp_x, temp_y);
 }
 
-static void npc_1(character *npc, dungeon *d, character *pc) {
+static void npc_1(character *npc, dungeon *d) {
   point_t p;
   p.xpos = npc->x;
   p.ypos = npc->y;
 
   d->character_map[npc->y][npc->x] = NULL;
 
-  if ((can_see_PC(npc, pc))) {
+  if ((can_see_PC(npc, d))) {
     p = get_smallest_neighbor_non_tunneling(p, d);
   }
 
   move_to_new_location(npc, d, p.xpos, p.ypos);
 }
 
-static void npc_2(character *npc, dungeon *d, character *pc) {
+static void npc_2(character *npc, dungeon *d) {
   uint8_t x_direction = 0, y_direction = 0;
 
-  if (npc->x != pc->x) {
-    x_direction = (pc->x - npc->x) / (uint8_t)abs(pc->x - npc->x);
+  if (npc->x != d->pc->x) {
+    x_direction = (d->pc->x - npc->x) / (uint8_t)abs(d->pc->x - npc->x);
   }
 
-  if (npc->y != pc->y) {
-    y_direction = (pc->y - npc->y) / (uint8_t)abs(pc->y - npc->y);
+  if (npc->y != d->pc->y) {
+    y_direction = (d->pc->y - npc->y) / (uint8_t)abs(d->pc->y - npc->y);
   }
 
   uint8_t temp_x = npc->x + x_direction, temp_y = npc->y + y_direction;
@@ -185,7 +185,7 @@ static void npc_2(character *npc, dungeon *d, character *pc) {
   }
 }
 
-static void npc_3(character *npc, dungeon *d, character *pc) {
+static void npc_3(character *npc, dungeon *d) {
   point_t p;
   p.xpos = npc->x;
   p.ypos = npc->y;
@@ -196,7 +196,7 @@ static void npc_3(character *npc, dungeon *d, character *pc) {
   move_to_new_location(npc, d, p.xpos, p.ypos);
 }
 
-static void npc_4(character *npc, dungeon *d, character *pc) {
+static void npc_4(character *npc, dungeon *d) {
   int temp_x = npc->x, temp_y = npc->y;
   d->character_map[npc->y][npc->x] = NULL;
 
@@ -264,12 +264,12 @@ static void npc_4(character *npc, dungeon *d, character *pc) {
   move_to_new_location(npc, d, temp_x, temp_y);
 }
 
-static void npc_5(character *npc, dungeon *d, character *pc) {
+static void npc_5(character *npc, dungeon *d) {
   point_t p;
   p.xpos = npc->x;
   p.ypos = npc->y;
 
-  if ((can_see_PC(npc, pc))) {
+  if ((can_see_PC(npc, d))) {
     p = get_smallest_neighbor_tunneling(p, d);
   }
 
@@ -292,15 +292,15 @@ static void npc_5(character *npc, dungeon *d, character *pc) {
   }
 }
 
-static void npc_6(character *npc, dungeon *d, character *pc) {
+static void npc_6(character *npc, dungeon *d) {
   uint8_t x_direction = 0, y_direction = 0;
 
-  if (npc->x != pc->x) {
-    x_direction = (pc->x - npc->x) / (uint8_t)abs(pc->x - npc->x);
+  if (npc->x != d->pc->x) {
+    x_direction = (d->pc->x - npc->x) / (uint8_t)abs(d->pc->x - npc->x);
   }
 
-  if (npc->y != pc->y) {
-    y_direction = (pc->y - npc->y) / (uint8_t)abs(pc->y - npc->y);
+  if (npc->y != d->pc->y) {
+    y_direction = (d->pc->y - npc->y) / (uint8_t)abs(d->pc->y - npc->y);
   }
 
   uint8_t temp_x = npc->x + x_direction, temp_y = npc->y + y_direction;
@@ -326,7 +326,7 @@ static void npc_6(character *npc, dungeon *d, character *pc) {
   }
 }
 
-static void npc_7(character *npc, dungeon *d, character *pc) {
+static void npc_7(character *npc, dungeon *d) {
   point_t p;
   p.xpos = npc->x;
   p.ypos = npc->y;
@@ -353,7 +353,7 @@ static void npc_7(character *npc, dungeon *d, character *pc) {
   }
 }
 
-static void npc_pass(character *npc, dungeon *d, character *pc) {
+static void npc_pass(character *npc, dungeon *d) {
   int temp_x, temp_y;
 
   switch (npc->direction) {
@@ -365,7 +365,7 @@ static void npc_pass(character *npc, dungeon *d, character *pc) {
       d->character_map[npc->y][npc->x] = NULL;
       move_to_new_location(npc, d, temp_x, temp_y);
     } else {
-      pc->direction = rand() % 4;
+      d->pc->direction = rand() % 4;
     }
     break;
 
@@ -377,7 +377,7 @@ static void npc_pass(character *npc, dungeon *d, character *pc) {
       d->character_map[npc->y][npc->x] = NULL;
       move_to_new_location(npc, d, temp_x, temp_y);
     } else {
-      pc->direction = rand() % 4;
+      d->pc->direction = rand() % 4;
     }
     break;
 
@@ -389,7 +389,7 @@ static void npc_pass(character *npc, dungeon *d, character *pc) {
       d->character_map[npc->y][npc->x] = NULL;
       move_to_new_location(npc, d, temp_x, temp_y);
     } else {
-      pc->direction = rand() % 4;
+      d->pc->direction = rand() % 4;
     }
     break;
 
@@ -401,23 +401,23 @@ static void npc_pass(character *npc, dungeon *d, character *pc) {
       d->character_map[npc->y][npc->x] = NULL;
       move_to_new_location(npc, d, temp_x, temp_y);
     } else {
-      pc->direction = rand() % 4;
+      d->pc->direction = rand() % 4;
     }
     break;
   }
 }
 
-static void npc_pass_smart(character *npc, dungeon *d, character *pc) {
-  if (can_see_PC(npc, pc)) {
+static void npc_pass_smart(character *npc, dungeon *d) {
+  if (can_see_PC(npc, d)) {
 
     uint8_t x_direction = 0, y_direction = 0;
 
-    if (npc->x != pc->x) {
-      x_direction = (pc->x - npc->x) / (uint8_t)abs(pc->x - npc->x);
+    if (npc->x != d->pc->x) {
+      x_direction = (d->pc->x - npc->x) / (uint8_t)abs(d->pc->x - npc->x);
     }
 
-    if (npc->y != pc->y) {
-      y_direction = (pc->y - npc->y) / (uint8_t)abs(pc->y - npc->y);
+    if (npc->y != d->pc->y) {
+      y_direction = (d->pc->y - npc->y) / (uint8_t)abs(d->pc->y - npc->y);
     }
 
     uint8_t temp_x = npc->x + x_direction, temp_y = npc->y + y_direction;
@@ -427,16 +427,16 @@ static void npc_pass_smart(character *npc, dungeon *d, character *pc) {
   }
 }
 
-static void npc_pass_tele(character *npc, dungeon *d, character *pc) {
+static void npc_pass_tele(character *npc, dungeon *d) {
 
   uint8_t x_direction = 0, y_direction = 0;
 
-  if (npc->x != pc->x) {
-    x_direction = (pc->x - npc->x) / (uint8_t)abs(pc->x - npc->x);
+  if (npc->x != d->pc->x) {
+    x_direction = (d->pc->x - npc->x) / (uint8_t)abs(d->pc->x - npc->x);
   }
 
-  if (npc->y != pc->y) {
-    y_direction = (pc->y - npc->y) / (uint8_t)abs(pc->y - npc->y);
+  if (npc->y != d->pc->y) {
+    y_direction = (d->pc->y - npc->y) / (uint8_t)abs(d->pc->y - npc->y);
   }
 
   uint8_t temp_x = npc->x + x_direction, temp_y = npc->y + y_direction;
@@ -532,35 +532,35 @@ not_enough_monsters:
   }
 }
 
-void npc_erratic(character *npc, dungeon *d, character *pc);
+void npc_erratic(character *npc, dungeon *d);
 
-void (*npc_move_func[])(character *npc, dungeon *d, character *pc) = {
+void (*npc_move_func[])(character *npc, dungeon *d) = {
     npc_0,       npc_1,       npc_2,        npc_3,       npc_4,
     npc_5,       npc_6,       npc_7,        npc_erratic, npc_erratic,
     npc_erratic, npc_erratic, npc_erratic,  npc_erratic, npc_erratic,
     npc_erratic, npc_pass,    npc_pass_tele};
 
-void npc_erratic(character *npc, dungeon *d, character *pc) {
+void npc_erratic(character *npc, dungeon *d) {
   int e = rand() % 2;
   if (e) {
     npc->direction = rand() % 4;
-    npc_0(npc, d, pc);
+    npc_0(npc, d);
   } else {
-    npc_move_func[npc->abilities & MOVEMENT_ABILITIES](npc, d, pc);
+    npc_move_func[npc->abilities & MOVEMENT_ABILITIES](npc, d);
   }
 }
 
-void move_monster(dungeon *d, character *to_move, character *pc) {
+void move_monster(dungeon *d, character *to_move) {
   if (has_characteristic(to_move->abilities, PASS)) {
     if (has_characteristic(to_move->abilities, TELE)) {
-      npc_pass_tele(to_move, d, pc);
+      npc_pass_tele(to_move, d);
     } else if (has_characteristic(to_move->abilities, SMART)) {
-      npc_pass_smart(to_move, d, pc);
+      npc_pass_smart(to_move, d);
     } else {
-      npc_pass(to_move, d, pc);
+      npc_pass(to_move, d);
     }
   } else {
-    npc_move_func[to_move->abilities & MOVEMENT_ABILITIES](to_move, d, pc);
+    npc_move_func[to_move->abilities & MOVEMENT_ABILITIES](to_move, d);
   }
 }
 
