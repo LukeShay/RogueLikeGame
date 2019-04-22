@@ -19,11 +19,11 @@
 
 #include "character_utils.hpp"
 #include <climits>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
-#include <stdint.h>
 
 #define ROOMS_MIN 6
 #define ROOMS_MAX 8
@@ -33,6 +33,17 @@
 #define ROOM_MAX_Y 4
 #define FILE_SEMANTIC "RLG327-S2019"
 #define FILE_PATH "/.rlg327/dungeon"
+
+typedef enum dungeon_terrain {
+  room_ter,
+  corridor_ter,
+  water_ter,
+  sand_ter,
+  up_stair_ter,
+  down_stair_ter
+} dungeon_terrain_t;
+
+const char *terrain_char = ".#~*<>";
 
 #define hardnesspair(pair) (hardness_map[pair[dim_y]][pair[dim_x]])
 
@@ -44,7 +55,7 @@ int32_t monster_cmp(const void *key, const void *with) {
   return ((character *)key)->p - ((character *)with)->p;
 }
 
-dungeon::dungeon(int num_lives, int num_mon, action_t action) {
+dungeon::dungeon(int num_lives, action_t action) {
   point_t pc;
   this->pc = new character;
 
@@ -81,12 +92,16 @@ dungeon::dungeon(int num_lives, int num_mon, action_t action) {
 
 dungeon::~dungeon() {
   int x, y;
+
   delete this->pc;
+  heap_delete(&mh);
+
   for (y = 0; y < DUNGEON_Y; y++) {
     for (x = 0; x < DUNGEON_X; x++) {
       if (item_map[y][x]) {
         delete item_map[y][x];
       }
+
       item_map[y][x] = NULL;
       character_map[y][x] = NULL;
     }
@@ -120,12 +135,13 @@ point_t dungeon::generate_dungeon() {
 
   num_rooms = generate_rooms(rooms);
   generate_corridors(rooms, num_rooms);
-  up_stairs[0] = place_stairs('<', upStairSpot);
+  up_stairs[0] = place_stairs(terrain_char[up_stair_ter], upStairSpot);
   if (num_up_stairs == 2)
-    up_stairs[1] = place_stairs('<', upStairSpot * 2);
-  down_stairs[0] = place_stairs('>', downStairSpot);
+    up_stairs[1] = place_stairs(terrain_char[up_stair_ter], upStairSpot * 2);
+  down_stairs[0] = place_stairs(terrain_char[down_stair_ter], downStairSpot);
   if (num_down_stairs == 2)
-    down_stairs[1] = place_stairs('>', downStairSpot * 2);
+    down_stairs[1] =
+        place_stairs(terrain_char[down_stair_ter], downStairSpot * 2);
   pc = place_PC(pcSpot);
   save_dungeon(rooms, up_stairs, down_stairs, pc, num_rooms, num_up_stairs,
                num_down_stairs);
@@ -685,7 +701,7 @@ uint16_t dungeon::generate_rooms(room_t rooms[]) {
       for (y = rooms[x].ypos; y < rooms[x].ypos + rooms[x].ysize; y++) {
         for (z = rooms[x].xpos; z < rooms[x].xpos + rooms[x].xsize; z++) {
           if (y < 20 && z < 79) {
-            this->terrain_map[y][z] = '.';
+            this->terrain_map[y][z] = terrain_char[room_ter];
             this->hardness_map[y][z] = 0;
           }
         }
@@ -739,8 +755,8 @@ void dungeon::dijkstra_corridor_inv(point_t from, point_t to) {
     if ((p->pos[dim_y] == to.ypos) && p->pos[dim_x] == to.xpos) {
       for (x = to.xpos, y = to.ypos; (x != from.xpos) || (y != from.ypos);
            p = &path[y][x], x = p->from[dim_x], y = p->from[dim_y]) {
-        if (this->terrain_map[y][x] != '.') {
-          this->terrain_map[y][x] = '#';
+        if (this->terrain_map[y][x] != terrain_char[room_ter]) {
+          this->terrain_map[y][x] = terrain_char[corridor_ter];
           this->hardness_map[y][x] = 0;
         }
       }
@@ -819,8 +835,10 @@ stair_t dungeon::place_stairs(char direction, uint8_t spot) {
   for (x = 1; x < DUNGEON_Y; x++) {
     for (y = 1; y < DUNGEON_X; y++) {
 
-      if ((this->terrain_map[x][y] == '.' || this->terrain_map[x][y] == '#') &&
-          this->terrain_map[x][y] != '>' && this->terrain_map[x][y] != '<')
+      if ((this->terrain_map[x][y] == terrain_char[room_ter] ||
+           this->terrain_map[x][y] == terrain_char[corridor_ter]) &&
+          this->terrain_map[x][y] != terrain_char[down_stair_ter] &&
+          this->terrain_map[x][y] != terrain_char[up_stair_ter])
         z++;
 
       if (z == spot) {

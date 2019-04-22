@@ -54,7 +54,7 @@ public:
   character *pc;
   heap_t mh;
 
-  dungeon(int num_lives, int num_mon, action_t action);
+  dungeon(int num_lives, action_t action);
   ~dungeon();
   void update_pc_map(int px, int py);
   void clear();

@@ -9,6 +9,7 @@
 #include <curses.h>
 #include <fstream>
 #include <iostream>
+#include <queue>
 #include <unistd.h>
 #include <vector>
 
@@ -22,7 +23,7 @@ int main(void) {
   character *mon;
 
   move = 0;
-  d = new dungeon(10000, 10, save);
+  d = new dungeon(1000, save);
 
   io_init_terminal();
 
@@ -56,7 +57,7 @@ new_dung:
           d->~dungeon();
 
           move = 0;
-          d = new dungeon(d->pc->hp, 10, save);
+          d = new dungeon(d->pc->hp, save);
 
           goto new_dung;
 
