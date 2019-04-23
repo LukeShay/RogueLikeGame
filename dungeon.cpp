@@ -147,7 +147,7 @@ point_t dungeon::generate_dungeon() {
   pc = place_PC(pcSpot);
   generate_water();
   generate_sand();
-  /*generate_portal();*/
+  generate_portal();
   save_dungeon(rooms, up_stairs, down_stairs, pc, num_rooms, num_up_stairs,
                num_down_stairs);
 
@@ -1092,4 +1092,28 @@ void dungeon::generate_sand() {
     }
   }
 done_placing_water:;
+}
+
+void dungeon::generate_portal() {
+  int y, x, i = 0, portal_location_1 = rand() % 3000,
+            portal_location_2 = rand() % 3000;
+
+  for (y = 0; y < DUNGEON_Y; y++) {
+    for (x = 0; x < DUNGEON_X; x++) {
+      if (terrain_map[y][x] != terrain_char[up_stair_ter] &&
+          terrain_map[y][x] != terrain_char[down_stair_ter] &&
+          hardness_map[y][x] == 0) {
+        i++;
+      }
+
+      if (i == portal_location_1 || i == portal_location_2) {
+        terrain_map[y][x] = terrain_char[portal_ter];
+      }
+    }
+
+    if (y == DUNGEON_Y - 1 &&
+        (i < portal_location_1 || i < portal_location_2)) {
+      y = 0;
+    }
+  }
 }
