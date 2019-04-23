@@ -13,12 +13,15 @@
 #include <unistd.h>
 #include <vector>
 
+#define START_DROWNING 5
+#define SAND_TELEPORT 5
+
 using namespace std;
 
 int main(void) {
   srand(time(NULL));
 
-  int fog = 0, move;
+  int fog = 0, move, water_counter = 0, sand_counter = 0;
   dungeon *d;
   character *mon;
 
@@ -32,7 +35,7 @@ new_dung:
 
   parse(&d->mv, &d->iv);
 
-  generate_monsters(d, &d->mh, &d->mv);
+  // generate_monsters(d, &d->mh, &d->mv);
   generate_items(d, &d->iv);
 
   render_dungeon(d, d->pc, fog);
@@ -48,6 +51,26 @@ new_dung:
     }
 
     if (has_characteristic(mon->abilities, PC)) {
+      if (d->terrain_map[d->pc->y][d->pc->x] == '~') {
+        water_counter++;
+
+        if (water_counter >= START_DROWNING) {
+          d->pc->hp -= 50;
+        }
+      } else {
+        water_counter = 0;
+      }
+
+      if (d->terrain_map[d->pc->y][d->pc->x] == '*') {
+        sand_counter++;
+
+        if (sand_counter == SAND_TELEPORT) {
+          goto fall_through_quicksand;
+        }
+      } else {
+        sand_counter = 0;
+      }
+
       render_dungeon(d, d->pc, fog);
 
       while (move == MOVE_INVALID || move >= INVALID_KEY) {
@@ -55,6 +78,8 @@ new_dung:
         d->update_pc_map(mon->x, mon->y);
 
         if (move == MOVE_STAIR) {
+        fall_through_quicksand:;
+          sand_counter = water_counter = 0;
 
           heap_reset(&d->mh);
 
