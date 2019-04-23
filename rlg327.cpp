@@ -23,7 +23,7 @@ int main(void) {
   character *mon;
 
   move = 0;
-  d = new dungeon(1000, save);
+  d = new dungeon(100000, save);
 
   io_init_terminal();
 
@@ -38,11 +38,15 @@ new_dung:
   render_dungeon(d, d->pc, fog);
 
   while ((mon = (character *)heap_remove_min(&d->mh))) {
+    assert(mon);
+    assert(d);
+
     if (d->pc->hp <= 0) {
       getch();
       game_over(LOSE);
       goto over;
     }
+
     if (has_characteristic(mon->abilities, PC)) {
       render_dungeon(d, d->pc, fog);
 
@@ -72,6 +76,9 @@ new_dung:
 
         } else if (move == TELEPORT) {
           render_dungeon(d, d->pc, fog);
+
+        } else if (move == GAME_OVER) {
+          goto over;
         }
       }
 
@@ -96,10 +103,10 @@ new_dung:
 
 over:
 
-  // delete pc;
-  heap_delete(&d->mh);
-  d->~dungeon();
   delete d;
+  endwin();
+  exit(0);
 
+  assert(!d);
   return 0;
 }

@@ -18,6 +18,7 @@
 #define FOG_TOGGLE 11
 #define TELEPORT 12
 #define ITEM_PICKUP 13
+#define GAME_OVER 14
 
 void io_init_terminal(void);
 int move_pc(dungeon *d, character *pc, heap_t *mh, std::vector<item_desc> *iv,

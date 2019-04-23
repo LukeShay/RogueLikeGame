@@ -14,12 +14,13 @@ public:
 
 int main(void) {
   priority_queue<character, vector<character>, compare_characters> pq;
-  character c;
+  character *c;
   int i;
 
   for (i = 0; i < 10; i++) {
-    c.p = i;
-    pq.push(c);
+    c = new character;
+    c->p = i;
+    pq.push(*c);
   }
 
   for (i = 0; i < 10; i++) {

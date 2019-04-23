@@ -40,10 +40,11 @@ typedef enum dungeon_terrain {
   water_ter,
   sand_ter,
   up_stair_ter,
-  down_stair_ter
+  down_stair_ter,
+  portal_ter
 } dungeon_terrain_t;
 
-const char *terrain_char = ".#~*<>";
+const char *terrain_char = ".#~*<>^";
 
 #define hardnesspair(pair) (hardness_map[pair[dim_y]][pair[dim_x]])
 
@@ -99,6 +100,7 @@ dungeon::~dungeon() {
   for (y = 0; y < DUNGEON_Y; y++) {
     for (x = 0; x < DUNGEON_X; x++) {
       if (item_map[y][x]) {
+        assert(item_map[y][x] != NULL);
         delete item_map[y][x];
       }
 
@@ -143,6 +145,9 @@ point_t dungeon::generate_dungeon() {
     down_stairs[1] =
         place_stairs(terrain_char[down_stair_ter], downStairSpot * 2);
   pc = place_PC(pcSpot);
+  generate_water();
+  /*  generate_sand();
+  generate_portal();*/
   save_dungeon(rooms, up_stairs, down_stairs, pc, num_rooms, num_up_stairs,
                num_down_stairs);
 
@@ -1029,4 +1034,32 @@ void clear() {
     for (int x = 0; x < DUNGEON_X; x++) {
     }
   }
+}
+
+void dungeon::generate_water() {
+  int water_x, water_y, water_start = rand() % 1000, v, w, x, y, i = 0;
+
+  for (y = 3; y < DUNGEON_Y - 3; y++) {
+    for (x = 6; x < DUNGEON_X - 6; x++) {
+      i++;
+
+      if (i == water_start) {
+        i = 0;
+        water_x = rand() % 2 + 6;
+        water_y = rand() % 2 + 4;
+
+        for (v = y; v < y + water_y && v < DUNGEON_Y; v++) {
+          for (w = x; w < x + water_x && w < DUNGEON_X; w++) {
+            if (terrain_map[v][w] != terrain_char[up_stair_ter] &&
+                terrain_map[v][w] != terrain_char[down_stair_ter]) {
+              terrain_map[v][w] = terrain_char[water_ter];
+              hardness_map[v][w] = 0;
+            }
+          }
+        }
+        goto done_placing_water;
+      }
+    }
+  }
+done_placing_water:;
 }

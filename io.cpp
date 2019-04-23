@@ -244,6 +244,7 @@ int valid_move(dungeon *d, uint8_t x, uint8_t y, character *pc) {
     if (d->character_map[y][x]->hp <= 0) {
       if (has_characteristic(d->character_map[y][x]->abilities, BOSS)) {
         game_over(WIN);
+        return GAME_OVER;
       }
 
       d->character_map[pc->y][pc->x] = NULL;
@@ -1051,8 +1052,6 @@ void game_over(int result) {
 
   refresh();
   getch();
-  endwin();
-  exit(0);
 }
 
 int move_pc(dungeon *d, character *pc, heap_t *mh, std::vector<item_desc> *iv,

@@ -78,6 +78,9 @@ private:
   void add_dungeon_corridor();
   void add_PC(point_t pc);
   void init_pc_map(point_t pc);
+  void generate_water();
+  void generate_sand();
+  void generate_portal();
 };
 
 typedef struct neighbor {
