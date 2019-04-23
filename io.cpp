@@ -773,6 +773,30 @@ void drop_item(dungeon *d, character *pc) {
   } while ((c = getch()) != 27);
 }
 
+int valid_portal(dungeon *d, character *pc, int c) {
+  int r = rand() % 10, y, x;
+
+  if (d->terrain_map[pc->y][pc->x] != '^') {
+    return MOVE_INVALID;
+  } else if (r == 0) {
+    return MOVE_STAIR;
+  } else {
+    for (y = 0; y < DUNGEON_Y; y++) {
+      for (x = 0; x < DUNGEON_X; x++) {
+        if (d->terrain_map[y][x] == '^' && y != pc->y && x != pc->x) {
+          d->character_map[pc->y][pc->x] = NULL;
+          pc->y = y;
+          pc->x = x;
+          d->character_map[pc->y][pc->x] = pc;
+
+          return MOVE_VALID;
+        }
+      }
+    }
+  }
+  return MOVE_INVALID;
+}
+
 void io_init_terminal() {
   initscr();
   raw();
@@ -1191,6 +1215,9 @@ int move_pc(dungeon *d, character *pc, heap_t *mh, std::vector<item_desc> *iv,
   case ',':
     pickup_item(d, pc);
     return ITEM_PICKUP;
+
+  case '^':
+    return valid_portal(d, pc, c);
 
   default:
     return INVALID_KEY;
