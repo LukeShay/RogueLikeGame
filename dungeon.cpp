@@ -146,8 +146,8 @@ point_t dungeon::generate_dungeon() {
         place_stairs(terrain_char[down_stair_ter], downStairSpot * 2);
   pc = place_PC(pcSpot);
   generate_water();
-  /*  generate_sand();
-  generate_portal();*/
+  generate_sand();
+  /*generate_portal();*/
   save_dungeon(rooms, up_stairs, down_stairs, pc, num_rooms, num_up_stairs,
                num_down_stairs);
 
@@ -1045,14 +1045,44 @@ void dungeon::generate_water() {
 
       if (i == water_start) {
         i = 0;
-        water_x = rand() % 2 + 6;
-        water_y = rand() % 2 + 4;
+        water_x = rand() % 2 + 4;
+        water_y = rand() % 2 + 2;
 
         for (v = y; v < y + water_y && v < DUNGEON_Y; v++) {
           for (w = x; w < x + water_x && w < DUNGEON_X; w++) {
             if (terrain_map[v][w] != terrain_char[up_stair_ter] &&
                 terrain_map[v][w] != terrain_char[down_stair_ter]) {
               terrain_map[v][w] = terrain_char[water_ter];
+              hardness_map[v][w] = 0;
+            }
+          }
+        }
+        goto done_placing_water;
+      }
+    }
+  }
+done_placing_water:;
+}
+
+void dungeon::generate_sand() {
+  int sand_x, sand_y, sand_start = rand() % 1000, v, w, x, y, i = 0;
+
+  for (y = 3; y < DUNGEON_Y - 3; y++) {
+    for (x = 6; x < DUNGEON_X - 6; x++) {
+      if (terrain_map[y][x] != terrain_char[water_ter]) {
+        i++;
+      }
+
+      if (i == sand_start) {
+        i = 0;
+        sand_x = rand() % 2 + 4;
+        sand_y = rand() % 2 + 2;
+
+        for (v = y; v < y + sand_y && v < DUNGEON_Y; v++) {
+          for (w = x; w < x + sand_x && w < DUNGEON_X; w++) {
+            if (terrain_map[v][w] != terrain_char[up_stair_ter] &&
+                terrain_map[v][w] != terrain_char[down_stair_ter]) {
+              terrain_map[v][w] = terrain_char[sand_ter];
               hardness_map[v][w] = 0;
             }
           }
