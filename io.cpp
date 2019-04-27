@@ -239,7 +239,7 @@ int valid_move(dungeon *d, uint8_t x, uint8_t y, character *pc) {
     return MOVE_INVALID;
 
   if (d->character_map[y][x]) {
-    d->character_map[y][x]->hp -= pc->get_damage();
+    d->character_map[y][x]->take_damage(pc->get_damage());
 
     if (d->character_map[y][x]->hp <= 0) {
       if (has_characteristic(d->character_map[y][x]->abilities, BOSS)) {

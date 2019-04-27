@@ -13,7 +13,7 @@ character::character() {
 
     if (i < 10 && inventory[i]) {
       inventory[i] = NULL;
-    } 
+    }
   }
 }
 
@@ -27,7 +27,7 @@ character::~character() {
 
     if (i < 10 && inventory[i]) {
       delete inventory[i];
-    } 
+    }
   }
 }
 
@@ -89,7 +89,7 @@ int character::get_speed() {
 
   for (i = 0; i < 12; i++) {
     if (equiped[i] && equiped[i]->speed_bonus > 0) {
-      ret_speed += equiped[i]->speed_bonus; 
+      ret_speed += equiped[i]->speed_bonus;
     }
   }
 
@@ -101,9 +101,23 @@ int character::get_damage() {
 
   for (i = 0; i < 12; i++) {
     if (equiped[i]) {
-      ret_damage += equiped[i]->damage_bonus.roll_dice(); 
+      ret_damage += equiped[i]->damage_bonus.roll_dice();
     }
   }
 
   return ret_damage < 0 ? ad.roll_dice() : ret_damage;
+}
+
+void character::take_damage(int damage) {
+  int i, defense = 0;
+
+  for (i = 0; i < 12; i++) {
+    if (equiped[i]) {
+      defense += equiped[i]->defense_bonus;
+    }
+  }
+
+  if (damage > defense) {
+    hp -= damage - defense;
+  }
 }

@@ -35,7 +35,7 @@ new_dung:
 
   parse(&d->mv, &d->iv);
 
-  // generate_monsters(d, &d->mh, &d->mv);
+  generate_monsters(d, &d->mh, &d->mv);
   generate_items(d, &d->iv);
 
   render_dungeon(d, d->pc, fog);

@@ -43,6 +43,7 @@ public:
                      uint8_t hardness_map[DUNGEON_Y][DUNGEON_X]);
   int get_speed();
   int get_damage();
+  void take_damage(int damage);
 };
 
 class character_desc {
