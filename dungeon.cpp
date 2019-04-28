@@ -1116,10 +1116,10 @@ void dungeon::generate_portal() {
           terrain_map[y][x] != terrain_char[down_stair_ter] &&
           hardness_map[y][x] == 0) {
         i++;
-      }
 
-      if (i == portal_location_1 || i == portal_location_2) {
-        terrain_map[y][x] = terrain_char[portal_ter];
+        if (i == portal_location_1 || i == portal_location_2) {
+          terrain_map[y][x] = terrain_char[portal_ter];
+        }
       }
     }
 
@@ -1134,24 +1134,22 @@ void dungeon::generate_traps() {
   int y, x, i = 0, trap_location_1 = rand() % 3000,
             trap_location_2 = rand() % 3000;
 
-  trap_location_1 = 1;
-
   for (y = 0; y < DUNGEON_Y; y++) {
     for (x = 0; x < DUNGEON_X; x++) {
       if (terrain_map[y][x] != terrain_char[up_stair_ter] &&
           terrain_map[y][x] != terrain_char[down_stair_ter] &&
           hardness_map[y][x] == 0) {
         i++;
-      }
 
-      if (i == trap_location_1) {
-        trap[0][dim_x] = x;
-        trap[0][dim_y] = y;
-      }
+        if (i == trap_location_1) {
+          trap[0][dim_x] = x;
+          trap[0][dim_y] = y;
+        }
 
-      if (i == trap_location_2) {
-        trap[1][dim_x] = x;
-        trap[1][dim_y] = y;
+        if (i == trap_location_2) {
+          trap[1][dim_x] = x;
+          trap[1][dim_y] = y;
+        }
       }
     }
 

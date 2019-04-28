@@ -18,15 +18,40 @@
 
 using namespace std;
 
-int main(void) {
+int main(int argc, char *argv[]) {
   srand(time(NULL));
 
   int fog = 0, move, water_counter = 0, sand_counter = 0;
   dungeon *d;
   character *mon;
+  action_t action;
+
+  if (argc == 2) {
+    if (!strcmp(argv[1], "--save")) {
+      action = save;
+    } else if (!strcmp(argv[1], "--load")) {
+      action = load;
+    } else {
+      printf("Correct usage: <--save|--load| --save --load|--load --save>");
+      return -1;
+    }
+  } else if (argc == 3) {
+    if ((!strcmp(argv[1], "--save") && !strcmp(argv[2], "--load")) ||
+        (!strcmp(argv[2], "--save") && !strcmp(argv[1], "--load"))) {
+      action = loadSave;
+    } else {
+      printf("Correct usage: <--save|--load| --save --load|--load --save>");
+      return -1;
+    }
+  } else if (argc > 3) {
+    printf("Correct usage: <--save|--load| --save --load|--load --save>");
+    return -1;
+  } else {
+    action = save;
+  }
 
   move = 0;
-  d = new dungeon(100000, save);
+  d = new dungeon(100000, action);
 
   io_init_terminal();
 
