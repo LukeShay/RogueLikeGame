@@ -53,6 +53,8 @@ public:
   std::vector<character_desc> mv;
   character *pc;
   heap_t mh;
+  int trap[2][num_dims];
+  int moves_trapped;
 
   dungeon(int num_lives, action_t action);
   ~dungeon();
@@ -81,6 +83,7 @@ private:
   void generate_water();
   void generate_sand();
   void generate_portal();
+  void generate_traps();
 };
 
 typedef struct neighbor {

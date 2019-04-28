@@ -19,11 +19,13 @@
 #define TELEPORT 12
 #define ITEM_PICKUP 13
 #define GAME_OVER 14
+#define MOVE_TRAPPED 15
 
 void io_init_terminal(void);
 int move_pc(dungeon *d, character *pc, heap_t *mh, std::vector<item_desc> *iv,
             int fog);
-void render_dungeon(dungeon *d, character *pc, int fog);
+void render_dungeon(dungeon *d, character *pc, int fog, std::string message);
 void game_over(int result);
+void display_message(int x, int y, char *s);
 
 #endif

@@ -59,6 +59,7 @@ int32_t monster_cmp(const void *key, const void *with) {
 dungeon::dungeon(int num_lives, action_t action) {
   point_t pc;
   this->pc = new character;
+  moves_trapped = 0;
 
   int x, y;
   for (y = 0; y < DUNGEON_Y; y++) {
@@ -148,6 +149,7 @@ point_t dungeon::generate_dungeon() {
   generate_water();
   generate_sand();
   generate_portal();
+  generate_traps();
   save_dungeon(rooms, up_stairs, down_stairs, pc, num_rooms, num_up_stairs,
                num_down_stairs);
 
@@ -465,6 +467,11 @@ point_t dungeon::load_dungeon() {
   add_dungeon_stairs(down_stairs, num_down_stairs);
   add_dungeon_corridor();
 
+  generate_water();
+  generate_sand();
+  generate_portal();
+  generate_traps();
+
   return pc;
 }
 
@@ -629,6 +636,11 @@ point_t dungeon::load_save_dungeon() {
   add_dungeon_corridor();
   save_dungeon(rooms, up_stairs, down_stairs, pc, num_rooms, num_up_stairs,
                num_down_stairs);
+
+  generate_water();
+  generate_sand();
+  generate_portal();
+  generate_traps();
 
   return pc;
 }
@@ -1113,6 +1125,37 @@ void dungeon::generate_portal() {
 
     if (y == DUNGEON_Y - 1 &&
         (i < portal_location_1 || i < portal_location_2)) {
+      y = 0;
+    }
+  }
+}
+
+void dungeon::generate_traps() {
+  int y, x, i = 0, trap_location_1 = rand() % 3000,
+            trap_location_2 = rand() % 3000;
+
+  trap_location_1 = 1;
+
+  for (y = 0; y < DUNGEON_Y; y++) {
+    for (x = 0; x < DUNGEON_X; x++) {
+      if (terrain_map[y][x] != terrain_char[up_stair_ter] &&
+          terrain_map[y][x] != terrain_char[down_stair_ter] &&
+          hardness_map[y][x] == 0) {
+        i++;
+      }
+
+      if (i == trap_location_1) {
+        trap[0][dim_x] = x;
+        trap[0][dim_y] = y;
+      }
+
+      if (i == trap_location_2) {
+        trap[1][dim_x] = x;
+        trap[1][dim_y] = y;
+      }
+    }
+
+    if (y == DUNGEON_Y - 1 && (i < trap_location_1 || i < trap_location_2)) {
       y = 0;
     }
   }

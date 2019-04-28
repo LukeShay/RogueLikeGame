@@ -38,7 +38,9 @@ new_dung:
   generate_monsters(d, &d->mh, &d->mv);
   generate_items(d, &d->iv);
 
-  render_dungeon(d, d->pc, fog);
+  render_dungeon(d, d->pc, fog,
+                 d->moves_trapped > 0 ? "You are trapped!"
+                                      : "Make your move summoner.");
 
   while ((mon = (character *)heap_remove_min(&d->mh))) {
     assert(mon);
@@ -71,7 +73,11 @@ new_dung:
         sand_counter = 0;
       }
 
-      render_dungeon(d, d->pc, fog);
+      d->moves_trapped = d->moves_trapped >= 2 ? 0 : d->moves_trapped;
+
+      render_dungeon(d, d->pc, fog,
+                     d->moves_trapped > 0 ? "You are trapped!"
+                                          : "Make your move summoner.");
 
       while (move == MOVE_INVALID || move >= INVALID_KEY) {
         move = move_pc(d, mon, &d->mh, &d->iv, fog);
@@ -97,13 +103,21 @@ new_dung:
         } else if (move == FOG_TOGGLE) {
           fog = fog == 1 ? 0 : 1;
 
-          render_dungeon(d, d->pc, fog);
+          render_dungeon(d, d->pc, fog,
+                         d->moves_trapped > 0 ? "You are trapped!"
+                                              : "Make your move summoner.");
 
         } else if (move == TELEPORT) {
-          render_dungeon(d, d->pc, fog);
+          render_dungeon(d, d->pc, fog,
+                         d->moves_trapped > 0 ? "You are trapped!"
+                                              : "Make your move summoner.");
 
         } else if (move == GAME_OVER) {
           goto over;
+        } else if (move == MOVE_TRAPPED) {
+          render_dungeon(d, d->pc, fog,
+                         d->moves_trapped > 0 ? "You are trapped!"
+                                              : "Make your move summoner.");
         }
       }
 

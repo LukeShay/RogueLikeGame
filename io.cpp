@@ -238,6 +238,15 @@ int valid_move(dungeon *d, uint8_t x, uint8_t y, character *pc) {
   if (d->hardness_map[y][x] != 0)
     return MOVE_INVALID;
 
+  if (((d->trap[0][dim_x] == pc->x && d->trap[0][dim_y] == pc->y) ||
+       (d->trap[1][dim_x] == pc->x && d->trap[1][dim_y] == pc->y)) &&
+      d->moves_trapped < 2) {
+    d->moves_trapped++;
+    return MOVE_TRAPPED;
+  } else {
+    d->moves_trapped = 0;
+  }
+
   if (d->character_map[y][x]) {
     d->character_map[y][x]->take_damage(pc->get_damage());
 
@@ -652,7 +661,9 @@ void look_at_monster(dungeon *d, character *pc, heap_t *mh) {
   int c;
   int new_x = pc->x, new_y = pc->y;
 
-  render_dungeon(d, pc, 0);
+  render_dungeon(d, pc, 0,
+                 d->moves_trapped > 0 ? "You are trapped!"
+                                      : "Make your move summoner.");
   attron(COLOR_PAIR(COLOR_RED));
   mvprintw(0, 0, "Looking                    ");
   mvprintw(DISPLAY_MAX_Y - 1, 0,
@@ -720,7 +731,9 @@ void look_at_monster(dungeon *d, character *pc, heap_t *mh) {
       goto move;
     }
   move:
-    render_dungeon(d, pc, 0);
+    render_dungeon(d, pc, 0,
+                   d->moves_trapped > 0 ? "You are trapped!"
+                                        : "Make your move summoner.");
     attron(COLOR_PAIR(COLOR_RED));
     mvprintw(0, 0, "Looking                    ");
     mvprintw(DISPLAY_MAX_Y - 1, 0,
@@ -949,13 +962,16 @@ done:
 
   d->character_map[pc->y][pc->x] = pc;
 
-  render_dungeon(d, pc, fog);
+  render_dungeon(d, pc, fog,
+                 d->moves_trapped > 0 ? "You are trapped!"
+                                      : "Make your move summoner.");
 }
 
-void render_dungeon(dungeon *d, character *pc, int fog) {
+void render_dungeon(dungeon *d, character *pc, int fog, std::string message) {
   int x, y, i;
 
   clear();
+  mvprintw(0, 0, message.c_str());
 
   for (y = 0; y < DUNGEON_Y; y++) {
     for (x = 0; x < DUNGEON_X; x++) {
@@ -1152,22 +1168,30 @@ int move_pc(dungeon *d, character *pc, heap_t *mh, std::vector<item_desc> *iv,
 
   case 'm':
     list_monsters(d, pc);
-    render_dungeon(d, pc, fog);
+    render_dungeon(d, pc, fog,
+                   d->moves_trapped > 0 ? "You are trapped!"
+                                        : "Make your move summoner.");
     return LIST_MONSTERS;
 
   case 'T':
     display_tunneling_map(d);
-    render_dungeon(d, pc, fog);
+    render_dungeon(d, pc, fog,
+                   d->moves_trapped > 0 ? "You are trapped!"
+                                        : "Make your move summoner.");
     return TUNNELING_MAP;
 
   case 'D':
     display_non_tunneling_map(d);
-    render_dungeon(d, pc, fog);
+    render_dungeon(d, pc, fog,
+                   d->moves_trapped > 0 ? "You are trapped!"
+                                        : "Make your move summoner.");
     return NON_TUNNELING_MAP;
 
   case 's':
     display_default_map(d);
-    render_dungeon(d, pc, fog);
+    render_dungeon(d, pc, fog,
+                   d->moves_trapped > 0 ? "You are trapped!"
+                                        : "Make your move summoner.");
     return DEFAULT_MAP;
 
   case 'q':
